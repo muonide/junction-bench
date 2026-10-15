@@ -1,0 +1,1756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Interactive band diagrams, charge, field, I–V and C–V for metal–semiconductor contacts, semiconductor junctions and MOS capacitors.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Contact &amp; Junction Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: instrument bench — a control rail on the left, a 2×2 plate of textbook-style figures on the right */
+:root{
+  --bg:#edf2ee; --panel:#fbfdfb; --ink:#16211b; --muted:#59695e; --line:#d1dbd3; --grid:#e3eae4;
+  --ef:#13795a; --pos:#c4432a; --neg:#2257c2; --metal:#8c9a90; --mfill:#d2dbd4; --vac:#839488;
+  --rect:#a35f00; --rect-bg:#fbefdc; --ohm:#13795a; --ohm-bg:#dcf1e6; --neu:#59695e; --neu-bg:#e4ebe5;
+  --tun:#6a3fb5; --tun-bg:#ece5f8; --chip:#e1e9e3;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e1511; --panel:#141d17; --ink:#e1ebe4; --muted:#93a698; --line:#28372d; --grid:#1c2820;
+  --ef:#4cc99a; --pos:#f2795c; --neg:#709df6; --metal:#6b7d70; --mfill:#25332a; --vac:#6b7f71;
+  --rect:#f0aa45; --rect-bg:#3a2a12; --ohm:#4cc99a; --ohm-bg:#123122; --neu:#a3b4a8; --neu-bg:#202c24;
+  --tun:#b596f0; --tun-bg:#2a2140; --chip:#1d2921; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0e1511; --panel:#141d17; --ink:#e1ebe4; --muted:#93a698; --line:#28372d; --grid:#1c2820;
+  --ef:#4cc99a; --pos:#f2795c; --neg:#709df6; --metal:#6b7d70; --mfill:#25332a; --vac:#6b7f71;
+  --rect:#f0aa45; --rect-bg:#3a2a12; --ohm:#4cc99a; --ohm-bg:#123122; --neu:#a3b4a8; --neu-bg:#202c24;
+  --tun:#b596f0; --tun-bg:#2a2140; --chip:#1d2921; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1380px;margin:0 auto;padding-inline:20px;padding-block:20px 40px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 18px;margin-bottom:14px}
+h1{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:70ch}
+.presets{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.presets span{font-family:var(--f-display);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);align-self:center;margin-right:4px}
+button.chip{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:4px 12px;cursor:pointer}
+button.chip:hover{border-color:var(--ink)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ef);outline-offset:2px}
+.main{display:grid;grid-template-columns:310px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.rail{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:16px;position:sticky;top:env(safe-area-inset-top,0px);max-height:100vh;overflow:auto}
+@media (max-width:900px){.rail{position:static;max-height:none}}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0;margin-bottom:8px;border-bottom:1px solid var(--line);width:100%;padding-bottom:4px}
+.ctl{display:flex;flex-direction:column;gap:3px}
+.ctl .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctl label{font-size:13px;font-weight:500}
+.ctl output,.mono{font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.ctl .hint{font-size:12px;color:var(--muted)}
+select{font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+input[type=range]{width:100%;accent-color:var(--ef);margin:2px 0}
+input[type=range]:disabled{opacity:.4}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;border:0;background:var(--bg);color:var(--ink);padding:5px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--panel);font-weight:600}
+.checks{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.checks label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.tag{font-family:var(--f-mono);font-size:11px;color:var(--rect)}
+.figs{display:flex;flex-direction:column;gap:16px;min-width:0}
+.status{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.status-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.pill{font-family:var(--f-display);font-weight:600;font-size:15px;padding:3px 12px;border-radius:999px;border:1px solid currentColor}
+.pill.schottky{color:var(--rect);background:var(--rect-bg)} .pill.ohmic{color:var(--ohm);background:var(--ohm-bg)}
+.pill.flat{color:var(--neu);background:var(--neu-bg)} .pill.tunnel{color:var(--tun);background:var(--tun-bg)}
+.sub-pill{font-size:13px;color:var(--muted)}
+.warn{font-size:12px;color:var(--rect);background:var(--rect-bg);border-radius:4px;padding:2px 8px}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 18px}
+.kv div{display:flex;flex-direction:column;min-width:0}
+.kv dt{font-size:11.5px;color:var(--muted);letter-spacing:.02em}
+.kv dd{margin:0;font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.story{margin:0;max-width:95ch;font-size:14px;color:var(--ink)}
+.plate{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:16px}
+.plate.b{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:1180px){.plate,.plate.b{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px 8px;min-width:0}
+figcaption{font-family:var(--f-display);font-weight:600;font-size:14px;margin-bottom:4px}
+figcaption small{font-family:var(--f-body);font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+figure svg{width:100%;height:auto;display:block}
+.ivhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.seg.mini{width:auto}.seg.mini button{padding:3px 12px;font-size:12.5px}
+.ivfig .kv{margin-top:8px;padding-top:10px;border-top:1px solid var(--line)}
+svg .iv{stroke:var(--ef);stroke-width:2.4;fill:none} svg .ivte{stroke:var(--muted);stroke-width:1.4;stroke-dasharray:5 4;fill:none}
+svg .ivdot{fill:var(--ef);stroke:var(--panel);stroke-width:2}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tabs button{font-family:var(--f-display);font-weight:600;font-size:15px;border:0;background:none;color:var(--muted);padding:8px 14px 9px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--ef)}
+.tabs button:hover{color:var(--ink)}
+.seg.three{grid-template-columns:1fr 1fr 1fr}
+svg .oxfill{fill:var(--rect-bg);opacity:.7;stroke:none}
+svg .hfdot{fill:var(--neg);stroke:var(--panel);stroke-width:1.5}
+svg .sideA{fill:var(--grid);opacity:.55;stroke:none}
+svg .efq{stroke:var(--ef);stroke-width:1.2;stroke-dasharray:2 4;fill:none}
+svg .ivn{stroke:var(--neg);stroke-width:1.4;stroke-dasharray:6 4;fill:none}
+svg .ivp{stroke:var(--pos);stroke-width:1.4;stroke-dasharray:6 4;fill:none}
+svg .ivgr{stroke:var(--muted);stroke-width:1.4;stroke-dasharray:1.5 3;fill:none}
+.notes{font-size:12.5px;color:var(--muted);max-width:110ch}
+.notes summary{cursor:pointer;font-weight:500;color:var(--ink)}
+/* SVG */
+svg text{font-family:var(--f-body);font-size:13px;fill:var(--ink)}
+svg .m{font-family:var(--f-mono);font-size:12px}
+svg .mut{fill:var(--muted)}
+svg .halo{paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
+svg .ax{stroke:var(--muted);stroke-width:1;fill:none}
+svg .gr{stroke:var(--grid);stroke-width:1;fill:none}
+svg .band{stroke:var(--ink);stroke-width:2.2;fill:none}
+svg .ef{stroke:var(--ef);stroke-width:1.8;stroke-dasharray:7 4;fill:none}
+svg .vac{stroke:var(--vac);stroke-width:1.4;stroke-dasharray:3 3;fill:none}
+svg .ei{stroke:var(--muted);stroke-width:1;stroke-dasharray:1 3;fill:none}
+svg .lvl{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 2;fill:none}
+svg .mfill{fill:var(--mfill);stroke:none}
+svg .medge{stroke:var(--metal);stroke-width:1.5;fill:none}
+svg .ann{stroke:var(--ink);stroke-width:1.1;fill:none}
+svg .annh{fill:var(--ink);stroke:none}
+svg .guide{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 3;fill:none}
+svg .pf{fill:var(--pos);fill-opacity:.22;stroke:var(--pos);stroke-width:1.6}
+svg .nf{fill:var(--neg);fill-opacity:.22;stroke:var(--neg);stroke-width:1.6}
+svg .pt{fill:var(--pos);font-family:var(--f-mono);font-weight:500}
+svg .nt{fill:var(--neg);font-family:var(--f-mono);font-weight:500}
+svg .ed{fill:var(--neg)} svg .hd{fill:none;stroke:var(--pos);stroke-width:1.2}
+svg .efill{fill:var(--neg);fill-opacity:.14;stroke:none}
+svg .eline{stroke:var(--neg);stroke-width:2;fill:none}
+svg .efc{fill:var(--ef)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <h1>Contact &amp; Junction Bench</h1>
+  <p>Pick the materials and doping, then watch the Fermi levels align, charge move across the interface, and the bands bend. Covers Schottky and ohmic contacts, p–n homojunctions and heterojunctions, and MOS capacitors. 300 K.</p>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Junction type">
+  <button role="tab" id="tabbtn-ms" aria-controls="tab-ms" aria-selected="true">Metal–semiconductor</button>
+  <button role="tab" id="tabbtn-hj" aria-controls="tab-hj" aria-selected="false">Semiconductor–semiconductor</button>
+  <button role="tab" id="tabbtn-mos" aria-controls="tab-mos" aria-selected="false">MOS capacitor</button>
+</nav>
+<section id="tab-ms" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-ms">
+<div class="presets" id="presets"><span>Try</span></div>
+
+<div class="main">
+<aside class="rail" aria-label="Contact parameters">
+  <fieldset>
+    <legend>Metal</legend>
+    <div class="ctl"><select id="metalSel" aria-label="Metal"></select></div>
+    <div class="ctl">
+      <div class="row"><label for="phim">Work function qφ<sub>m</sub></label><output id="phimO"></output></div>
+      <input type="range" id="phim" min="3.4" max="6.0" step="0.01">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Semiconductor</legend>
+    <div class="ctl"><select id="semiSel" aria-label="Semiconductor"></select></div>
+    <div class="ctl">
+      <div class="row"><label for="Eg">Band gap E<sub>g</sub> <span class="tag" id="EgTag"></span></label><output id="EgO"></output></div>
+      <input type="range" id="Eg" min="0.2" max="4.0" step="0.01">
+    </div>
+    <div class="ctl">
+      <div class="row"><label for="chi">Electron affinity qχ <span class="tag" id="chiTag"></span></label><output id="chiO"></output></div>
+      <input type="range" id="chi" min="3.0" max="5.0" step="0.01">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Doping &amp; Fermi level</legend>
+    <div class="seg" role="group" aria-label="Doping type">
+      <button id="typeN" aria-pressed="true">n-type (donor)</button>
+      <button id="typeP" aria-pressed="false">p-type (acceptor)</button>
+    </div>
+    <div class="ctl"><label for="dopSel">Dopant · ionization energy</label><select id="dopSel"></select></div>
+    <div class="ctl">
+      <div class="row"><label for="logN" id="logNLbl">Concentration N<sub>D</sub></label><output id="logNO"></output></div>
+      <input type="range" id="logN" min="13" max="20.3" step="0.05">
+    </div>
+    <div class="ctl">
+      <div class="row"><label for="EF">Fermi level E<sub>F</sub> − E<sub>V</sub></label><output id="EFO"></output></div>
+      <input type="range" id="EF" min="0" max="1.12" step="0.002">
+      <span class="hint" id="EFhint"></span>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Interface &amp; bias</legend>
+    <div class="ctl">
+      <div class="row"><label for="pin">Pinning factor S</label><output id="pinO"></output></div>
+      <input type="range" id="pin" min="0" max="1" step="0.01">
+      <span class="hint">1 = ideal Schottky–Mott. 0 = E<sub>F</sub> fully pinned at the charge-neutrality level.</span>
+    </div>
+    <div class="ctl">
+      <div class="row"><label for="V">Junction bias V<sub>j</sub></label><output id="VO"></output></div>
+      <input type="range" id="V" min="-3" max="0.5" step="0.01">
+      <span class="hint" id="Vhint"></span>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Display</legend>
+    <div class="checks">
+      <label><input type="checkbox" id="showVac" checked> Vacuum level in contact diagram</label>
+      <label><input type="checkbox" id="showCar" checked> Free carriers (● e⁻, ○ h⁺)</label>
+      <label><input type="checkbox" id="showEi"> Intrinsic level E<sub>i</sub></label>
+      <label><input type="checkbox" id="minor"> Minority carriers in Poisson (allows inversion)</label>
+    </div>
+  </fieldset>
+</aside>
+
+<section class="figs">
+  <div class="status">
+    <div class="status-top"><span class="pill" id="pill"></span><span class="sub-pill" id="subpill"></span><span id="warns"></span></div>
+    <dl class="kv" id="kv"></dl>
+    <p class="story" id="story"></p>
+  </div>
+  <div class="plate">
+    <figure><figcaption>Fig. 1 · Before contact<small>isolated, common vacuum level</small></figcaption><div id="f1"></div></figure>
+    <figure><figcaption id="f2cap">Fig. 2 · In contact</figcaption><div id="f2"></div></figure>
+  </div>
+  <div class="plate b">
+    <figure><figcaption>Fig. 3 · Charge density ρ(x)/q<small>metal sheet charge drawn schematically</small></figcaption><div id="f3"></div></figure>
+    <figure><figcaption>Fig. 4 · Electric field ℰ(x)</figcaption><div id="f4"></div></figure>
+  </div>
+  <figure class="ivfig">
+    <div class="ivhead"><figcaption>Fig. 5 · Current–voltage characteristic<small>J vs applied V, 100 µm layer series resistance included</small></figcaption>
+      <div class="seg mini" role="group" aria-label="Current axis scale"><button id="ivLog" aria-pressed="true">log |J|</button><button id="ivLin" aria-pressed="false">linear J</button></div></div>
+    <div id="f5"></div>
+    <dl class="kv" id="ivkv"></dl>
+  </figure>
+  <details class="notes">
+    <summary>Model and assumptions</summary>
+    <p>Bulk E<sub>F</sub> comes from charge neutrality p − n + N<sub>D</sub><sup>+</sup> − N<sub>A</sub><sup>−</sup> = 0 with Boltzmann carrier statistics and incomplete dopant ionization (degeneracy factors 2 for donors, 4 for acceptors), so the dopant choice matters for deep levels such as Mg in GaN. Moving the Fermi-level slider solves backward for the doping that gives it. Poisson's equation is integrated exactly in 1D from the interface into the bulk (no depletion approximation), with the dopant ionization following the local band bending. The displayed W uses the depletion approximation W = √(2ε(V<sub>bi</sub> − V − kT/q)/qN).</p>
+    <p>Barrier: qφ<sub>Bn</sub> = S(qφ<sub>m</sub> − qχ) + (1 − S)(E<sub>g</sub> − qφ<sub>0</sub>) (Cowley–Sze), with φ<sub>0</sub> an approximate charge-neutrality level for each material. When S &lt; 1 the vacuum level steps at the interface (interface dipole) and the metal sheet charge in Fig. 3 includes the interface-state charge. By default minority carriers are held at their bulk density (the usual Schottky-diode picture). With the minority-carrier option on, at zero bias they follow Boltzmann statistics too, which can produce an inversion layer under large barriers. Under bias the majority-carrier quasi-Fermi level stays flat in the semiconductor and minority carriers stay at their bulk density. Image-force lowering is reported but not drawn. Transport regime uses E<sub>00</sub> = (qħ/2)√(N/m*ε): thermionic below 0.5 kT, thermionic-field to 2 kT, field emission (tunneling) above. The I–V curve (Fig. 5) uses the Tsu–Esaki form J = A*T² ∫ T(E) ln[(1+e^{(E_F,s−E)/kT})/(1+e^{(E_F,m−E)/kT})] dE/kT, with a WKB transmission T(E) through the parabolic depletion-approximation barrier, so thermionic, thermionic-field and field emission come out of one calculation; the dashed curve is thermionic emission alone. A* = 120 m*/m₀ A cm⁻² K⁻². Image-force lowering is not applied to the current. A series resistance from a 100 µm thick layer, with a simple doping-dependent mobility μ₀/(1+√(N/10¹⁷)), is added; ohmic and neutral contacts are treated as ρ<sub>c</sub> + R<sub>s</sub> in series. Material constants are room-temperature textbook values (Sze, Ioffe database) and are approximate.</p>
+  </details>
+</section>
+</div>
+</section>
+<section id="tab-hj" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-hj" hidden>
+<div class="presets" id="jpresets"><span>Try</span></div>
+<div class="main">
+<aside class="rail" aria-label="Junction parameters">
+  <div id="jsideA"></div>
+  <div id="jsideB"></div>
+  <fieldset>
+    <legend>Interface &amp; bias</legend>
+    <div class="ctl">
+      <div class="row"><label for="jSig">Interface sheet charge σ<sub>int</sub></label><output id="jSigO"></output></div>
+      <input type="range" id="jSig" min="-30" max="30" step="0.1">
+      <span class="hint">Fixed charge at the interface, e.g. polarization charge in AlGaN/GaN (≈ +1×10¹³ q/cm²). Leave at 0 for the Anderson model.</span>
+    </div>
+    <div class="ctl">
+      <div class="row"><label for="jV">Junction bias V<sub>j</sub> (left side +)</label><output id="jVO"></output></div>
+      <input type="range" id="jV" min="-3" max="3" step="0.01">
+      <span class="hint" id="jVhint"></span>
+    </div>
+  </fieldset>
+  <fieldset>
+    <legend>Display</legend>
+    <div class="checks">
+      <label><input type="checkbox" id="jVac"> Vacuum level in junction diagram</label>
+      <label><input type="checkbox" id="jCar" checked> Free carriers (● e⁻, ○ h⁺)</label>
+      <label><input type="checkbox" id="jEi"> Intrinsic level E<sub>i</sub></label>
+    </div>
+    <div class="ctl"><label>Zoom on interface</label>
+      <div class="seg three" role="group" aria-label="Zoom"><button id="jZ1" aria-pressed="true">1×</button><button id="jZ10" aria-pressed="false">10×</button><button id="jZ100" aria-pressed="false">100×</button></div>
+    </div>
+  </fieldset>
+</aside>
+
+<section class="figs">
+  <div class="status">
+    <div class="status-top"><span class="pill" id="jpill"></span><span class="sub-pill" id="jsub"></span><span id="jwarns"></span></div>
+    <dl class="kv" id="jkv"></dl>
+    <p class="story" id="jstory"></p>
+  </div>
+  <div class="plate">
+    <figure><figcaption>Fig. 1 · Before contact<small>isolated, common vacuum level</small></figcaption><div id="jf1"></div></figure>
+    <figure><figcaption id="jf2cap">Fig. 2 · Junction</figcaption><div id="jf2"></div></figure>
+  </div>
+  <div class="plate b">
+    <figure><figcaption>Fig. 3 · Charge density ρ(x)/q<small id="jf3sub"></small></figcaption><div id="jf3"></div></figure>
+    <figure><figcaption>Fig. 4 · Electric field ℰ(x)<small>D = εℰ is continuous unless σ<sub>int</sub> ≠ 0</small></figcaption><div id="jf4"></div></figure>
+  </div>
+  <figure class="ivfig">
+    <div class="ivhead"><figcaption>Fig. 5 · Current–voltage characteristic<small>J vs applied V (left side +), 100 µm of each side in series</small></figcaption>
+      <div class="seg mini" role="group" aria-label="Current axis scale"><button id="jivLog" aria-pressed="true">log |J|</button><button id="jivLin" aria-pressed="false">linear J</button></div></div>
+    <div id="jf5"></div>
+    <dl class="kv" id="jivkv"></dl>
+  </figure>
+  <details class="notes">
+    <summary>Model and assumptions</summary>
+    <p>Band alignment follows Anderson's electron-affinity rule: ΔE<sub>C</sub> = χ<sub>A</sub> − χ<sub>B</sub> and ΔE<sub>V</sub> = (χ<sub>A</sub> + E<sub>gA</sub>) − (χ<sub>B</sub> + E<sub>gB</sub>). Real offsets often differ (Al₀.₃Ga₀.₇As/GaAs has ΔE<sub>C</sub> ≈ 0.65 ΔE<sub>g</sub> experimentally), so edit χ to impose a measured offset. The vacuum level is continuous unless you add an interface sheet charge.</p>
+    <p>Each side's bulk E<sub>F</sub> comes from charge neutrality with Boltzmann statistics and incomplete ionization, as in the contact tab. Poisson's equation is integrated exactly on each side from the interface into the bulk. The split of the total band bending between the two sides is found by requiring ε<sub>B</sub>ℰ<sub>B</sub>(0⁺) − ε<sub>A</sub>ℰ<sub>A</sub>(0⁻) = σ<sub>int</sub>. At zero bias all carriers follow the common Fermi level. Under bias each side's majority carriers follow that side's quasi-Fermi level and minority carriers are held at their bulk density. The W values shown use the depletion approximation with the solved band bending on each side.</p>
+    <p>Current: electrons and holes each pass through a series combination of thermionic emission over the highest point of their band edge (A* = 120 m*/m₀) and minority-carrier diffusion into any side where they are minority (L = √(Dτ), capped at the 100 µm layer). This gives the Shockley diode for homojunctions, injection asymmetry for heterojunctions, and spike-limited transport when a conduction- or valence-band spike rises above both bulks. Depletion-region recombination q n<sub>i</sub>W/2τ·(e<sup>qV/2kT</sup> − 1) is added for p–n junctions. Tunneling through spikes and band-to-band (Esaki) tunneling are not modeled. Lifetimes are typical textbook values: 1 µs for Si and Ge, 10 ns for most III–Vs, 1 ns for nitrides.</p>
+  </details>
+</section>
+</div>
+</section>
+<section id="tab-mos" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-mos" hidden>
+<div class="presets" id="mpresets"><span>Try</span></div>
+<div class="main">
+<aside class="rail" aria-label="MOS parameters">
+  <fieldset>
+    <legend>Gate</legend>
+    <div class="ctl"><select id="mGate" aria-label="Gate material"></select></div>
+    <div class="ctl"><div class="row"><label for="mPhim">Work function qφ<sub>m</sub></label><output id="mPhimO"></output></div>
+      <input type="range" id="mPhim" min="3.5" max="6.0" step="0.01"></div>
+  </fieldset>
+  <fieldset>
+    <legend>Insulator</legend>
+    <div class="ctl"><select id="mOx" aria-label="Insulator"></select></div>
+    <div class="ctl"><div class="row"><label for="mTox">Thickness t<sub>ox</sub></label><output id="mToxO"></output></div>
+      <input type="range" id="mTox" min="0" max="2.3" step="0.01"></div>
+    <div class="ctl"><div class="row"><label for="mQf">Fixed charge Q<sub>f</sub>/q</label><output id="mQfO"></output></div>
+      <input type="range" id="mQf" min="-100" max="100" step="1">
+      <span class="hint">Sheet charge at the insulator/semiconductor interface. Thermal SiO₂ on Si is typically +10¹⁰ to +10¹¹ q/cm².</span></div>
+  </fieldset>
+  <div id="msemi"></div>
+  <fieldset>
+    <legend>Gate bias</legend>
+    <div class="ctl"><div class="row"><label for="mVG">Gate voltage V<sub>G</sub></label><output id="mVGO"></output></div>
+      <input type="range" id="mVG" min="-3" max="3" step="0.01"><span class="hint" id="mVGhint"></span></div>
+    <div class="ctl"><label>Minority carriers</label>
+      <div class="seg" role="group" aria-label="Minority carrier supply"><button id="mEq" aria-pressed="true">Equilibrium (slow)</button><button id="mDD" aria-pressed="false">Deep depletion (fast)</button></div>
+      <span class="hint">Deep depletion is what you get when the gate is swept faster than thermal generation can supply an inversion layer.</span></div>
+  </fieldset>
+  <fieldset>
+    <legend>Display</legend>
+    <div class="checks">
+      <label><input type="checkbox" id="mVac"> Vacuum level</label>
+      <label><input type="checkbox" id="mCar" checked> Free carriers (● e⁻, ○ h⁺)</label>
+      <label><input type="checkbox" id="mEi" checked> Intrinsic level E<sub>i</sub> and qφ<sub>B</sub></label>
+    </div>
+    <div class="ctl"><label>Zoom on interface</label>
+      <div class="seg three" role="group" aria-label="Zoom"><button id="mZ1" aria-pressed="true">1×</button><button id="mZ10" aria-pressed="false">10×</button><button id="mZ100" aria-pressed="false">100×</button></div></div>
+  </fieldset>
+</aside>
+
+<section class="figs">
+  <div class="status">
+    <div class="status-top"><span class="pill" id="mpill"></span><span class="sub-pill" id="msub"></span><span id="mwarns"></span></div>
+    <dl class="kv" id="mkv"></dl>
+    <p class="story" id="mstory"></p>
+  </div>
+  <div class="plate">
+    <figure><figcaption>Fig. 1 · Before contact<small>isolated, common vacuum level</small></figcaption><div id="mf1"></div></figure>
+    <figure><figcaption id="mf2cap">Fig. 2 · MOS band diagram</figcaption><div id="mf2"></div></figure>
+  </div>
+  <div class="plate b">
+    <figure><figcaption>Fig. 3 · Charge density ρ(x)/q<small>sheet charges drawn schematically</small></figcaption><div id="mf3"></div></figure>
+    <figure><figcaption>Fig. 4 · Electric field ℰ(x)<small>oxide drawn at fixed width</small></figcaption><div id="mf4"></div></figure>
+  </div>
+  <figure class="ivfig">
+    <div class="ivhead"><figcaption>Fig. 5 · Capacitance–voltage characteristic<small>C/C<sub>ox</sub> vs gate voltage</small></figcaption></div>
+    <div id="mf5"></div>
+    <dl class="kv" id="mcvkv"></dl>
+  </figure>
+  <details class="notes">
+    <summary>Model and assumptions</summary>
+    <p>Ideal MOS capacitor: no gate leakage, no interface traps, and an optional fixed sheet charge Q<sub>f</sub> at the insulator/semiconductor interface. The gate equation is V<sub>G</sub> = Φ<sub>ms</sub> + ψ<sub>s</sub> − (Q<sub>s</sub> + Q<sub>f</sub>)/C<sub>ox</sub>, so V<sub>FB</sub> = Φ<sub>ms</sub> − Q<sub>f</sub>/C<sub>ox</sub>. The semiconductor charge Q<sub>s</sub>(ψ<sub>s</sub>) comes from the exact first integral of Poisson's equation with Boltzmann statistics and incomplete dopant ionization. Insulator band edges follow the electron-affinity rule; the oxide valence band is usually off scale.</p>
+    <p>V<sub>T</sub> is defined at ψ<sub>s</sub> = 2φ<sub>B</sub>, where qφ<sub>B</sub> = |E<sub>F</sub> − E<sub>i</sub>| in the bulk, and is computed from the exact Q<sub>s</sub>.</p>
+    <p>C–V curves: C = (1/C<sub>ox</sub> + 1/C<sub>s</sub>)⁻¹. Low frequency uses C<sub>s</sub> = |dQ<sub>s</sub>/dψ<sub>s</sub>| with all carriers responding. High frequency uses the same DC bias point, but the inversion charge cannot follow the AC signal, so C<sub>s</sub> comes from majority carriers and dopants only. That makes C saturate at C<sub>min</sub> once ψ<sub>s</sub> pins near 2φ<sub>B</sub>. Deep depletion removes the inversion layer from the DC solution too, so the depletion region keeps widening past threshold. Quantum confinement and poly-gate depletion are not modeled, so very thin oxides look slightly better than they really are.</p>
+  </details>
+</section>
+</div>
+</section>
+
+
+</div>
+
+<script>
+const VT=0.025852, Q=1.602177e-19, EPS0=8.8541878e-14, HBAR=1.054572e-34, M0=9.10938e-31, LN2=Math.LN2, LN4=Math.log(4);
+const METALS={Mg:3.66,Ag:4.26,Al:4.28,Ti:4.33,Cr:4.5,W:4.55,Mo:4.6,Cu:4.65,Au:5.1,Pd:5.12,Ni:5.15,Pt:5.65};
+const SEMIS={
+ Si:{chi:4.05,Eg:1.12,er:11.7,Nc:2.8e19,Nv:1.04e19,me:0.26,mh:0.39,mun:1400,mup:450,cnl:0.36,n:{P:0.045,As:0.054,Sb:0.039},p:{B:0.045,Al:0.057,Ga:0.065,In:0.16}},
+ Ge:{chi:4.0,Eg:0.66,er:16.0,Nc:1.04e19,Nv:6.0e18,me:0.12,mh:0.21,mun:3900,mup:1900,cnl:0.09,n:{P:0.012,As:0.0127,Sb:0.0096},p:{B:0.0104,Al:0.0102,Ga:0.0108,In:0.0112}},
+ GaAs:{chi:4.07,Eg:1.424,er:12.9,Nc:4.7e17,Nv:9.0e18,me:0.067,mh:0.45,mun:8500,mup:400,cnl:0.5,n:{Si:0.0058,Se:0.0059,Te:0.0058},p:{Be:0.028,Zn:0.031,C:0.027}},
+ InP:{chi:4.38,Eg:1.344,er:12.5,Nc:5.7e17,Nv:1.1e19,me:0.08,mh:0.6,mun:5400,mup:200,cnl:0.9,n:{Si:0.0057,S:0.0057,Sn:0.0057},p:{Zn:0.035,Be:0.03}},
+ GaN:{chi:4.1,Eg:3.4,er:8.9,Nc:2.3e18,Nv:4.6e19,me:0.2,mh:1.0,mun:1000,mup:30,cnl:2.4,n:{Si:0.015,Ge:0.019,O:0.03},p:{Mg:0.17}},
+ '4H-SiC':{chi:3.6,Eg:3.26,er:9.7,Nc:1.7e19,Nv:2.5e19,me:0.38,mh:1.0,mun:900,mup:120,cnl:1.5,n:{N:0.061,P:0.08},p:{Al:0.20,B:0.30}}
+};
+const PRESETS=[
+ ['Au / n-Si · Schottky',{semi:'Si',type:'n',dopant:'P',logN:16,metal:'Au',pin:1}],
+ ['Mg / n-Si · ohmic',{semi:'Si',type:'n',dopant:'P',logN:17,metal:'Mg',pin:1}],
+ ['Al / p-Si · Schottky',{semi:'Si',type:'p',dopant:'B',logN:16,metal:'Al',pin:1}],
+ ['Pt / p-Si · ohmic',{semi:'Si',type:'p',dopant:'B',logN:16,metal:'Pt',pin:1}],
+ ['Au / n⁺ Si · tunneling',{semi:'Si',type:'n',dopant:'P',logN:19.7,metal:'Au',pin:1}],
+ ['Au / n-GaAs · pinned',{semi:'GaAs',type:'n',dopant:'Si',logN:17,metal:'Au',pin:0.1}],
+ ['Ni / p-GaN:Mg · deep acceptor',{semi:'GaN',type:'p',dopant:'Mg',logN:19,metal:'Ni',pin:1}]
+];
+const S={metal:'Au',phim:5.1,semi:'Si',chi:4.05,Eg:1.12,type:'n',dopant:'P',logN:16,pin:1,V:0,showVac:true,showCar:true,showEi:false,minor:false,ivLog:true};
+const $=id=>document.getElementById(id);
+
+/* ---------- formatting ---------- */
+const SUP={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+const sup=n=>String(n).split('').map(c=>SUP[c]||c).join('');
+function sci(v,d=2){if(!isFinite(v))return '—';if(v===0)return '0';const e=Math.floor(Math.log10(Math.abs(v)));let m=v/10**e;if(Math.abs(m).toFixed(d-1)==='10.0'||Math.abs(+m.toFixed(d-1))>=10){m/=10;return `${m.toFixed(d-1)}×10${sup(e+1)}`}return `${m.toFixed(d-1)}×10${sup(e)}`}
+function len(cm){const nm=cm*1e7;if(nm<1000)return (nm<10?nm.toFixed(2):nm<100?nm.toFixed(1):nm.toFixed(0))+' nm';return (nm/1000).toFixed(nm<1e4?2:1)+' µm'}
+const f2=v=>(v>=0?'':'−')+Math.abs(v).toFixed(2), f3=v=>(v>=0?'':'−')+Math.abs(v).toFixed(3);
+const sgn=v=>(v>=0?'+':'−')+Math.abs(v).toFixed(2);
+const sp=x=>x>30?x:Math.log1p(Math.exp(x));
+
+/* ---------- physics ---------- */
+function solveEF(m,type,N,dE,Eg){
+  const f=EF=>{const n=m.Nc*Math.exp((EF-Eg)/VT),p=m.Nv*Math.exp(-EF/VT);
+    const ion=type==='n'?N/(1+2*Math.exp((EF-(Eg-dE))/VT)):-N/(1+4*Math.exp((dE-EF)/VT));return p-n+ion};
+  let lo=-1,hi=Eg+1;for(let i=0;i<120;i++){const mid=(lo+hi)/2;if(f(mid)>0)lo=mid;else hi=mid}return (lo+hi)/2;
+}
+function logNforEF(target){
+  const m=SEMIS[S.semi],dE=m[S.type][S.dopant];let lo=13,hi=20.3;
+  const g=l=>solveEF(m,S.type,10**l,dE,S.Eg);
+  const up=S.type==='n';
+  for(let i=0;i<60;i++){const mid=(lo+hi)/2;const e=g(mid);if((e<target)===up)lo=mid;else hi=mid}
+  return (lo+hi)/2;
+}
+function compute(){
+  const m=SEMIS[S.semi],Eg=S.Eg,chi=S.chi,N=10**S.logN,dE=m[S.type][S.dopant],isN=S.type==='n',s=isN?1:-1;
+  const EF=solveEF(m,S.type,N,dE,Eg);
+  const n0=m.Nc*Math.exp((EF-Eg)/VT),p0=m.Nv*Math.exp(-EF/VT);
+  const ni=Math.sqrt(m.Nc*m.Nv)*Math.exp(-Eg/(2*VT)),Ei=Eg/2+VT/2*Math.log(m.Nv/m.Nc);
+  const a=(EF-(Eg-dE))/VT,b=(dE-EF)/VT;
+  const fion=isN?1/(1+2*Math.exp(a)):1/(1+4*Math.exp(b));
+  const phis=chi+Eg-EF;
+  const cnl=m.cnl*(Eg/m.Eg);
+  const phiBn=S.pin*(S.phim-chi)+(1-S.pin)*(Eg-cnl);
+  const phimEff=phiBn+chi,dip=phimEff-S.phim,phiBp=Eg-phiBn;
+  const D0=phimEff-phis,Vbi=s*D0;
+  const regime=Vbi>3*VT?'schottky':Vbi<-3*VT?'ohmic':'flat';
+  let Vmax=regime==='schottky'?Math.floor((Vbi-0.05)*100)/100:0;
+  if(regime!=='schottky')S.V=0;else S.V=Math.min(Math.max(S.V,-3),Vmax);
+  const V=S.V,EFm=-s*V,Delta=D0+EFm,us=-Delta/VT;
+  const eps=m.er*EPS0;
+  const eq=Math.abs(V)<1e-9&&S.minor,eq0=Math.abs(V)<1e-9;
+  const eFull=isN||eq,hFull=!isN||eq;
+  const B=u=>{const Bn=eFull?-n0*Math.expm1(u):-n0*u;const Bp=hFull?-p0*Math.expm1(-u):p0*u;
+    const I=isN?N*(u-(sp(a+u+LN2)-sp(a+LN2))):-N*((u+sp(b-u+LN4))-sp(b+LN4));return Bn+Bp+I};
+  const rho=u=>{const n=eFull?n0*Math.exp(u):n0,p=hFull?p0*Math.exp(-u):p0;
+    const ion=isN?N/(1+2*Math.exp(a+u)):-N/(1+4*Math.exp(b-u));return p-n+ion};
+  const k=Math.sqrt(2*Q/(eps*VT));
+  const fu=u=>u===0?0:-Math.sign(u)*k*Math.sqrt(Math.max(0,-B(u)));
+  const nmaj=isN?n0:p0;
+  const LD=Math.sqrt(eps*VT/(Q*nmaj));
+  const Wd=regime==='schottky'?Math.sqrt(2*eps*Math.max(Vbi-V-VT,VT)/(Q*N)):0;
+  const xmax=regime==='schottky'?1.7*Wd:10*LD;
+  // integrate from interface into bulk
+  const X=[0],U=[us];let x=0,u=us;const hmax=xmax/500,hmin=xmax*1e-7;
+  while(x<xmax&&X.length<8000&&Math.abs(u)>1e-5){
+    const d=fu(u);let h=0.03*Math.max(Math.abs(u),0.05)/Math.max(Math.abs(d),1e-30);h=Math.min(hmax,Math.max(hmin,h));
+    const k1=fu(u),k2=fu(u+h/2*k1),k3=fu(u+h/2*k2),k4=fu(u+h*k3);
+    let un=u+h/6*(k1+2*k2+2*k3+k4);if(un*u<0)un=0;x+=h;u=un;X.push(x);U.push(u);
+  }
+  if(x<xmax){X.push(xmax);U.push(0)}
+  const Ecb=Eg-EF;
+  const Es=-VT*fu(us); // V/cm
+  const sigma=eps*Es;  // C/cm^2 on metal (incl. interface states)
+  const dphi=Math.sqrt(Q*Math.abs(Es)/(4*Math.PI*eps));
+  const mstar=isN?m.me:m.mh;
+  const E00=HBAR/2*Math.sqrt(N*1e6/(mstar*M0*eps*100));
+  const r00=E00/VT;
+  const transport=r00<0.5?'TE':r00<2?'TFE':'FE';
+  const surfMin=isN?p0*Math.exp(-us):n0*Math.exp(us);
+  const invPot=eq0&&regime==='schottky'&&surfMin>nmaj;const inversion=eq&&invPot;
+  const degenerate=isN?(Eg-EF)<2*VT:EF<2*VT;
+  const surfMaj=isN?n0*Math.exp(us):p0*Math.exp(-us);
+  const degSurf=regime==='ohmic'&&surfMaj>(isN?m.Nc:m.Nv);
+  return {m,Eg,chi,N,dE,isN,s,EF,n0,p0,ni,Ei,fion,phis,cnl,phiBn,phiBp,phimEff,dip,D0,Vbi,regime,Vmax,V,EFm,Delta,us,eps,
+    X,U,Ecb,Es,sigma,dphi,E00,r00,transport,inversion,invPot,eq,degenerate,degSurf,surfMaj,LD,Wd,xmax,rho,fu,nmaj};
+}
+
+/* ---------- SVG helpers ---------- */
+const r1=v=>(+v).toFixed(1);
+const L=(x1,y1,x2,y2,c)=>`<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" class="${c}"/>`;
+const T=(x,y,t,c='',a='start')=>`<text x="${r1(x)}" y="${r1(y)}" class="${c}" text-anchor="${a}">${t}</text>`;
+const P=(d,c)=>`<path d="${d}" class="${c}"/>`;
+const sb=(b,s)=>`${b}<tspan dy="3.5" font-size="72%">${s}</tspan><tspan dy="-3.5"> </tspan>`;
+function arrow(x,y1,y2){
+  const dy=y2-y1;if(Math.abs(dy)<3)return '';
+  const s=Math.sign(dy),h=Math.min(5,Math.abs(dy)/3);
+  const head=(y,dir)=>`<polygon class="annh" points="${r1(x)},${r1(y)} ${r1(x-3.2)},${r1(y-dir*h*1.4)} ${r1(x+3.2)},${r1(y-dir*h*1.4)}"/>`;
+  return L(x,y1+s*h,x,y2-s*h,'ann')+head(y1,-s)+head(y2,s);
+}
+function ticks(min,max,n=5){const span=max-min;if(span<=0)return [min];const st=10**Math.floor(Math.log10(span/n));const err=n/span*st;
+  const step=st*(err<=0.15?10:err<=0.35?5:err<=0.75?2:1);const out=[];for(let v=Math.ceil(min/step)*step;v<=max+1e-12*span;v+=step)out.push(+v.toPrecision(12));return out}
+function hash(i){let x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
+const svg=(w,h,inner,label)=>`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${inner}</svg>`;
+const xUnit=xmax=>xmax<1e-4?{f:1e7,u:'nm'}:{f:1e4,u:'µm'};
+
+/* ---------- Fig 1: before contact ---------- */
+function drawBefore(R){
+  const W=420,H=440,top=24,bot=H-34;
+  const Ev=-R.chi-R.Eg,Ec=-R.chi,EFs=-R.phis,EFm=-S.phim;
+  const Emin=Math.min(Ev,EFm)-0.35,Emax=0.35;
+  const y=E=>top+(Emax-E)/(Emax-Emin)*(bot-top);
+  const mx0=16,mx1=124,sx0=228,sx1=410;
+  let s=`<defs><pattern id="hatch1" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" class="medge" stroke-width="1"/></pattern></defs>`;
+  s+=L(mx0,y(0),sx1,y(0),'vac')+T(sx1,y(0)-6,sb('E','vac'),'mut','end');
+  s+=`<rect x="${mx0}" y="${r1(y(EFm))}" width="${mx1-mx0}" height="${r1(bot-y(EFm))}" class="mfill"/><rect x="${mx0}" y="${r1(y(EFm))}" width="${mx1-mx0}" height="${r1(bot-y(EFm))}" fill="url(#hatch1)" opacity=".5"/>`;
+  s+=L(mx0,y(EFm),mx1,y(EFm),'ef')+T(mx1-4,y(EFm)-6,sb('E','F,m'),'halo','end');
+  s+=T((mx0+mx1)/2,bot+20,`${S.metal==='custom'?'Metal':S.metal}`,'mut','middle');
+  s+=arrow(mx0+22,y(0),y(EFm))+T(mx0+29,(y(0)+y(EFm))/2+4,`qφ<tspan font-size="72%" dy="3.5">m</tspan><tspan dy="-3.5"> = ${S.phim.toFixed(2)}</tspan>`,'m halo');
+  // semiconductor
+  s+=L(sx0,y(Ec),sx1,y(Ec),'band')+L(sx0,y(Ev),sx1,y(Ev),'band')+L(sx0,y(EFs),sx1,y(EFs),'ef');
+  if(S.showEi)s+=L(sx0,y(Ev+R.Ei),sx1,y(Ev+R.Ei),'ei');
+  if(R.dE>0.09){const lv=R.isN?Ec-R.dE:Ev+R.dE;s+=L(sx0,y(lv),sx1,y(lv),'lvl')}
+  s+=T(sx0-5,y(Ec)+4,sb('E','C'),'halo','end')+T(sx0-5,y(Ev)+4,sb('E','V'),'halo','end');
+  const efBelow=R.isN?(Ec-EFs)<0.18:false, efAbove=!R.isN&&(EFs-Ev)<0.18;
+  s+=T(sx1,efBelow?y(EFs)+15:efAbove?y(EFs)-6:y(EFs)+15,sb('E','F'),'halo','end');
+  s+=T((sx0+sx1)/2,bot+20,`${S.type}-${S.semi} : ${S.dopant}`,'mut','middle');
+  s+=arrow(sx0+12,y(0),y(Ec))+T(sx0+19,(y(0)+y(Ec))/2+4,`qχ = ${R.chi.toFixed(2)}`,'m halo');
+  s+=arrow(sx0+108,y(0),y(EFs))+T(sx0+115,(y(0)+y(EFs))/2+4,`qφ<tspan font-size="72%" dy="3.5">s</tspan><tspan dy="-3.5"> = ${R.phis.toFixed(2)}</tspan>`,'m halo');
+  s+=arrow(sx0+40,y(Ec),y(Ev))+T(sx0+47,(y(Ec)+y(Ev))/2+4,`E<tspan font-size="72%" dy="3.5">g</tspan><tspan dy="-3.5"> = ${R.Eg.toFixed(2)}</tspan>`,'m halo');
+  // Fermi level offset in the gap
+  const gx=176;
+  s+=L(mx1,y(EFm),gx+6,y(EFm),'guide')+L(gx-6,y(EFs),sx0,y(EFs),'guide');
+  const d=S.phim-R.phis;
+  s+=arrow(gx,y(EFm),y(EFs))+T(gx,Math.max(y(EFm),y(EFs))+18,`Δ = ${sgn(d)}`,'m halo','middle');
+  s+=T(gx,Math.max(y(EFm),y(EFs))+32,'φm − φs','mut halo','middle');
+  return svg(W,H,s,'Band diagram of metal and semiconductor before contact');
+}
+
+/* ---------- Fig 2: in contact ---------- */
+function drawAfter(R){
+  const W=640,H=430,top=22,bot=H-46,px0=62,px1=628;
+  const xL=-0.24*R.xmax,xs=x=>px0+(x-xL)/(R.xmax-xL)*(px1-px0);
+  const Ec=R.U.map(u=>R.Ecb-VT*u),Ev=Ec.map(e=>e-R.Eg);
+  const Ec0=Ec[0],Ev0=Ev[0],EFm=R.EFm;
+  let lo=Math.min(Ev0,Ev[Ev.length-1],EFm,0),hi=Math.max(Ec0,R.Ecb,EFm,0);
+  if(S.showVac)hi=Math.max(hi,Ec0+R.chi,R.Ecb+R.chi,EFm+S.phim);
+  lo-=0.3;hi+=0.25;
+  const y=E=>top+(hi-E)/(hi-lo)*(bot-top);
+  const x0=xs(0);
+  let s=`<defs><pattern id="hatch2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" class="medge" stroke-width="1"/></pattern></defs>`;
+  // x axis
+  const xu=xUnit(R.xmax);
+  s+=L(px0,bot,px1,bot,'ax');
+  for(const t of ticks(0,R.xmax*xu.f,5)){const X=xs(t/xu.f);s+=L(X,bot,X,bot+4,'ax')+T(X,bot+17,t,'m mut','middle')}
+  s+=T(px1,bot+34,`x (${xu.u}) →`,'mut','end');
+  // energy axis
+  s+=L(px0,top,px0,bot,'ax');
+  for(const t of ticks(lo,hi,6)){const Y=y(t);s+=L(px0-4,Y,px0,Y,'ax')+T(px0-7,Y+4,(+t.toFixed(2)).toString().replace('-','−'),'m mut','end')}
+  s+=`<text transform="translate(16 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">E − E<tspan font-size="72%" dy="3">F,s</tspan><tspan dy="-3"> (eV)</tspan></text>`;
+  // metal
+  s+=`<rect x="${r1(px0+1)}" y="${r1(y(EFm))}" width="${r1(x0-px0-1)}" height="${r1(bot-y(EFm))}" class="mfill"/><rect x="${r1(px0+1)}" y="${r1(y(EFm))}" width="${r1(x0-px0-1)}" height="${r1(bot-y(EFm))}" fill="url(#hatch2)" opacity=".5"/>`;
+  s+=L(x0,top,x0,bot,'medge');
+  s+=L(px0,y(EFm),x0,y(EFm),'ef')+T(px0+6,y(EFm)-6,sb('E','F,m'),'halo');
+  s+=T((px0+x0)/2,bot-8,S.metal==='custom'?'metal':S.metal,'mut halo','middle');
+  // metal surface charge signs
+  if(Math.abs(R.sigma)>1e-10){const n=6,ch=R.sigma<0?'−':'+',cl=R.sigma<0?'nt':'pt';for(let i=0;i<n;i++){const yy=y(EFm)+18+i*((bot-y(EFm)-30)/n);if(yy<bot-4)s+=T(x0-7,yy,ch,cl,'middle')}}
+  // decimate path
+  const pts=[];let lastX=-1;for(let i=0;i<R.X.length;i++){const X=xs(R.X[i]);if(X-lastX>=0.6||i===R.X.length-1){pts.push(i);lastX=X}}
+  const path=arr=>'M'+pts.map(i=>`${r1(xs(R.X[i]))},${r1(y(arr[i]))}`).join('L');
+  if(S.showVac){const vac=Ec.map(e=>e+R.chi);s+=P(path(vac),'vac')+L(px0,y(EFm+S.phim),x0,y(EFm+S.phim),'vac');
+    if(Math.abs(R.dip)>0.005)s+=L(x0,y(EFm+S.phim),x0,y(vac[0]),'vac')+T(x0+8,(y(EFm+S.phim)+y(vac[0]))/2+4,`dipole ${sgn(R.dip)} eV`,'m mut halo');
+    s+=T(px1,y(vac[vac.length-1])-6,sb('E','vac'),'mut halo','end')}
+  if(S.showEi){const ei=Ev.map(e=>e+R.Ei);s+=P(path(ei),'ei')+T(px1,y(ei[ei.length-1])-4,sb('E','i'),'mut halo','end')}
+  if(R.dE>0.09){const lv=R.isN?Ec.map(e=>e-R.dE):Ev.map(e=>e+R.dE);s+=P(path(lv),'lvl')+T(px1,y(lv[lv.length-1])+(R.isN?14:-5),sb('E',R.isN?'D':'A'),'mut halo','end')}
+  // carriers
+  if(S.showCar){
+    let i=0;const step=4.5;
+    for(let X=x0+2;X<px1;X+=step,i++){
+      const xd=xL+(X-px0)/(px1-px0)*(R.xmax-xL);let j=0;while(j<R.X.length-1&&R.X[j+1]<xd)j++;
+      const t=R.X[j+1]!==undefined?(xd-R.X[j])/Math.max(R.X[j+1]-R.X[j],1e-30):0;const u=R.U[j]+(R.U[j+1]!==undefined?(R.U[j+1]-R.U[j])*Math.min(Math.max(t,0),1):0);
+      const ecY=y(R.Ecb-VT*u),evY=y(R.Ecb-VT*u-R.Eg);
+      const n=(R.isN||R.eq?R.n0*Math.exp(u):R.n0)/R.nmaj, p=(!R.isN||R.eq?R.p0*Math.exp(-u):R.p0)/R.nmaj;
+      const en=1.6*Math.min(n,2.2),ep=1.6*Math.min(p,2.2);
+      for(let k=0;k<3;k++){
+        if(hash(i*7+k)<en-k)s+=`<circle cx="${r1(X+hash(i*13+k)*2)}" cy="${r1(ecY-3-hash(i*3+k*11)*10)}" r="1.9" class="ed"/>`;
+        if(hash(i*5+k+99)<ep-k)s+=`<circle cx="${r1(X+hash(i*17+k)*2)}" cy="${r1(evY+3+hash(i*19+k*7)*10)}" r="2" class="hd"/>`;
+      }
+    }
+  }
+  s+=P(path(Ec),'band')+P(path(Ev),'band');
+  s+=L(x0,y(0),px1,y(0),'ef');
+  s+=T(px1,y(Ec[Ec.length-1])-6,sb('E','C'),'halo','end')+T(px1,y(Ev[Ev.length-1])+16,sb('E','V'),'halo','end');
+  const efLblY=R.isN&&R.Ecb<0.2?y(0)+15:!R.isN&&(-Ev[Ev.length-1])<0.2?y(0)-6:y(0)+15;
+  s+=T(px1-34,efLblY,sb('E','F,s'),'halo','end');
+  // annotations: barrier height
+  const bx=x0+14;
+  if((R.isN?R.phiBn:R.phiBp)<=0){}else if(R.isN){s+=arrow(bx,y(EFm),y(Ec0))+T(bx+7,Math.min(y(EFm),y(Ec0))+(Math.abs(y(EFm)-y(Ec0))<24?-6:Math.abs(y(EFm)-y(Ec0))/2+4),`qφ<tspan font-size="72%" dy="3.5">Bn</tspan><tspan dy="-3.5"> = ${R.phiBn.toFixed(2)}</tspan>`,'m halo')}
+  else{s+=arrow(bx,y(Ev0),y(EFm))+T(bx+7,Math.min(y(EFm),y(Ev0))+(Math.abs(y(EFm)-y(Ev0))<24?-6:Math.abs(y(EFm)-y(Ev0))/2+4),`qφ<tspan font-size="72%" dy="3.5">Bp</tspan><tspan dy="-3.5"> = ${R.phiBp.toFixed(2)}</tspan>`,'m halo')}
+  // bias offset
+  if(Math.abs(R.V)>1e-9){const qx=px0+22;s+=L(qx-10,y(0),x0,y(0),'guide')+arrow(qx,y(0),y(EFm))+T(qx+6,(y(0)+y(EFm))/2+4,`qV = ${Math.abs(R.V).toFixed(2)}`,'m halo')}
+  // band bending
+  const maj=R.isN?Ec:Ev,majb=maj[maj.length-1],maj0=maj[0];
+  if(R.regime==='schottky'){
+    const ax=xs(Math.min(R.Wd*1.25,R.xmax*0.9));
+    s+=L(bx+4,y(maj0),ax+6,y(maj0),'guide')+arrow(ax,y(majb),y(maj0));
+    const lbl=Math.abs(R.V)>1e-9?`q(V<tspan font-size="72%" dy="3.5">bi</tspan><tspan dy="-3.5">−V) = ${(R.Vbi-R.V).toFixed(2)}</tspan>`:`qV<tspan font-size="72%" dy="3.5">bi</tspan><tspan dy="-3.5"> = ${R.Vbi.toFixed(2)}</tspan>`;
+    s+=T(ax+7,(y(majb)+y(maj0))/2+4,lbl,'m halo');
+    const wx=xs(R.Wd);s+=L(wx,top+4,wx,bot,'guide')+T(wx,top+12,`W = ${len(R.Wd)}`,'m halo','middle');
+    if(R.inversion)s+=T(x0+60,R.isN?y(Ev0)+30:y(Ec0)-22,'inversion layer','mut halo');
+  }else if(R.regime==='ohmic'){
+    s+=T(x0+22,R.isN?y(Ec0)-18:y(Ev0)+28,R.isN?'electron accumulation':'hole accumulation','mut halo');
+  }
+  return svg(W,H,s,'Band diagram of the metal–semiconductor contact');
+}
+
+/* ---------- Fig 3 / 4 shared frame ---------- */
+function frame(R,vals,yLabelFn,opts){
+  const W=520,H=300,top=20,bot=H-44,px0=74,px1=508;
+  const xL=-0.24*R.xmax,xs=x=>px0+(x-xL)/(R.xmax-xL)*(px1-px0);
+  return {W,H,top,bot,px0,px1,xL,xs};
+}
+function axisX(F,R){const xu=xUnit(R.xmax);let s=L(F.px0,F.bot,F.px1,F.bot,'ax');
+  for(const t of ticks(0,R.xmax*xu.f,5)){const X=F.xs(t/xu.f);s+=L(X,F.bot,X,F.bot+4,'ax')+T(X,F.bot+17,t,'m mut','middle')}
+  return s+T(F.px1,F.bot+34,`x (${xu.u}) →`,'mut','end')}
+function scaleY(maxAbs){const e=Math.floor(Math.log10(maxAbs||1));return {e,f:10**e}}
+
+function drawCharge(R){
+  const F=frame(R);const rho=R.U.map(u=>R.rho(u));
+  let m=0;for(const v of rho)m=Math.max(m,Math.abs(v));if(m===0)m=1;
+  const lim=m*1.15,mid=(F.top+F.bot)/2,y=v=>mid-v/lim*(F.bot-F.top)/2;
+  const sc=scaleY(m);let s='';
+  for(const t of ticks(-lim/sc.f,lim/sc.f,4)){const Y=y(t*sc.f);if(Y<F.top-1||Y>F.bot+1)continue;s+=L(F.px0,Y,F.px1,Y,'gr')+T(F.px0-6,Y+4,(+t.toFixed(2)).toString().replace('-','−'),'m mut','end')}
+  s+=`<text transform="translate(16 ${r1(mid)}) rotate(-90)" text-anchor="middle" class="mut">ρ/q (10${sup(sc.e)} cm⁻³)</text>`;
+  s+=L(F.px0,mid,F.px1,mid,'ax')+L(F.px0,F.top,F.px0,F.bot,'ax');
+  const x0=F.xs(0);
+  s+=`<rect x="${r1(F.px0+1)}" y="${F.top}" width="${r1(x0-F.px0-1)}" height="${F.bot-F.top}" class="mfill" opacity=".55"/>`+L(x0,F.top,x0,F.bot,'medge');
+  s+=T((F.px0+x0)/2,F.top+14,'metal','mut','middle');
+  // semiconductor areas split by sign
+  const pts=[];let last=-1;for(let i=0;i<R.X.length;i++){const X=F.xs(R.X[i]);if(X-last>=0.6||i===R.X.length-1){pts.push(i);last=X}}
+  const pos=[],neg=[];for(const i of pts){const X=F.xs(R.X[i]),v=rho[i];pos.push(`${r1(X)},${r1(y(Math.max(v,0)))}`);neg.push(`${r1(X)},${r1(y(Math.min(v,0)))}`)}
+  const xe=r1(F.xs(R.X[pts[pts.length-1]]));
+  s+=`<path d="M${r1(x0)},${r1(mid)}L${pos.join('L')}L${xe},${r1(mid)}Z" class="pf"/>`;
+  s+=`<path d="M${r1(x0)},${r1(mid)}L${neg.join('L')}L${xe},${r1(mid)}Z" class="nf"/>`;
+  // glyphs inside the areas
+  let g=0;for(let X=x0+9;X<F.px1-4;X+=15,g++){
+    const xd=F.xL+(X-F.px0)/(F.px1-F.px0)*(R.xmax-F.xL);let j=0;while(j<R.X.length-1&&R.X[j+1]<xd)j++;
+    const v=rho[j],hgt=Math.abs(y(v)-mid);if(hgt<13)continue;
+    for(let yy=10;yy<hgt-2;yy+=14){s+=T(X,v>0?mid-yy+4:mid+yy+4,v>0?'+':'−',v>0?'pt':'nt','middle')}
+  }
+  // metal sheet charge (delta function, schematic)
+  const sh=Math.abs(R.sigma)/Q;
+  if(sh>1e3){
+    const neg_=R.sigma<0,top_=neg_?mid:F.top+4,h=(F.bot-F.top)/2-4;
+    s+=`<rect x="${r1(x0-9)}" y="${r1(top_)}" width="8" height="${r1(h)}" class="${neg_?'nf':'pf'}"/>`;
+    for(let k=0;k<4;k++)s+=T(x0-18,neg_?mid+18+k*24:mid-10-k*24,neg_?'−':'+',neg_?'nt':'pt','middle');
+    s+=T(x0+12,neg_?mid+(F.bot-mid)*0.55:mid-(mid-F.top)*0.45,`← metal sheet σ<tspan font-size="72%" dy="3.5">m</tspan><tspan dy="-3.5"> = ${R.sigma<0?'−':'+'}${sci(Math.abs(R.sigma)/Q)} q/cm²</tspan>`,'m halo','start');
+  }
+  s+=axisX(F,R);
+  const semiQ=-R.sigma;
+  s+=T(F.px1,F.top+12,`semiconductor: ${semiQ>=0?'+':'−'}${sci(Math.abs(semiQ)/Q)} q/cm²`,'m mut halo','end');
+  return svg(F.W,F.H,s,'Space charge density across the contact');
+}
+
+function drawField(R){
+  const F=frame(R);const E=R.U.map(u=>-VT*R.fu(u));
+  let m=0;for(const v of E)m=Math.max(m,Math.abs(v));if(m===0)m=1;
+  let unit='V/cm',uf=1;if(m>=1e6){unit='MV/cm';uf=1e6}else if(m>=1e3){unit='kV/cm';uf=1e3}
+  const neg=E[0]<0;const lim=m*1.15;
+  const yTop=neg?0:lim,yBot=neg?-lim:0;
+  const y=v=>F.top+(yTop-v)/(yTop-yBot)*(F.bot-F.top);
+  let s='';
+  for(const t of ticks(yBot/uf,yTop/uf,5)){const Y=y(t*uf);s+=L(F.px0,Y,F.px1,Y,'gr')+T(F.px0-6,Y+4,(+t.toPrecision(3)).toString().replace('-','−'),'m mut','end')}
+  s+=`<text transform="translate(16 ${r1((F.top+F.bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">ℰ (${unit})</text>`;
+  s+=L(F.px0,F.top,F.px0,F.bot,'ax');
+  const x0=F.xs(0);
+  s+=`<rect x="${r1(F.px0+1)}" y="${F.top}" width="${r1(x0-F.px0-1)}" height="${F.bot-F.top}" class="mfill" opacity=".55"/>`+L(x0,F.top,x0,F.bot,'medge');
+  s+=T((F.px0+x0)/2,neg?F.bot-8:F.top+14,'metal · ℰ = 0','mut','middle');
+  const pts=[];let last=-1;for(let i=0;i<R.X.length;i++){const X=F.xs(R.X[i]);if(X-last>=0.6||i===R.X.length-1){pts.push(i);last=X}}
+  const line=pts.map(i=>`${r1(F.xs(R.X[i]))},${r1(y(E[i]))}`);
+  const xe=r1(F.xs(R.X[pts[pts.length-1]]));
+  s+=`<path d="M${r1(x0)},${r1(y(0))}L${line.join('L')}L${xe},${r1(y(0))}Z" class="efill"/>`;
+  s+=L(F.px0,y(0),x0,y(0),'eline')+`<path d="M${line.join('L')}" class="eline"/>`+L(x0,y(0),x0,y(E[0]),'eline');
+  s+=L(F.px0,y(0),F.px1,y(0),'ax');
+  s+=`<circle cx="${r1(x0)}" cy="${r1(y(E[0]))}" r="3.5" class="efc"/>`;
+  s+=T(x0+9,y(E[0])+(neg?-6:14),`ℰ<tspan font-size="72%" dy="3.5">s</tspan><tspan dy="-3.5"> = ${E[0]<0?'−':''}${sci(Math.abs(E[0]))} V/cm</tspan>`,'m halo');
+  s+=T(F.px1,neg?F.bot-8:F.top+14,E[0]<0?'field points toward the metal':E[0]>0?'field points into the semiconductor':'no field',"mut halo",'end');
+  s+=axisX(F,R);
+  return svg(F.W,F.H,s,'Electric field across the contact');
+}
+
+/* ---------- I–V ---------- */
+function ivModel(R){
+  const m=R.m,isN=R.isN,mstar=isN?m.me:m.mh,JT=120*mstar*300*300,kT=VT;
+  const dEdge=isN?R.Eg-R.EF:R.EF;
+  const mu=(isN?m.mun:m.mup)/(1+Math.sqrt(R.N/1e17));
+  const Rs=1/(Q*R.nmaj*mu)*100e-4;
+  const epsSI=R.eps*100,NSI=R.N*1e6,mkg=mstar*M0;
+  const barrier=R.regime==='schottky';
+  function Jb(Vj,tun){
+    const U0=Math.max(R.Vbi-Vj,0),xtop=U0/kT,xend=xtop+40;
+    const Wm=Math.sqrt(2*epsSI*U0/(Q*NSI)),C=2*Math.sqrt(2*mkg)*Wm*Math.sqrt(U0*Q)/HBAR;
+    const a0=dEdge/kT,b0=(-Vj-dEdge)/kT;
+    const n=Math.min(4000,Math.max(240,Math.ceil(xend/0.25))),h=xend/n;let sum=0;
+    for(let i=0;i<n;i++){const x=(i+0.5)*h;let T=1;
+      if(x<xtop){if(!tun)T=0;else{const a2=x/xtop,r=Math.sqrt(1-a2),g=0.5*r-0.5*a2*Math.log((1+r)/Math.sqrt(a2));T=Math.exp(-C*g)}}
+      if(T>0)sum+=T*(sp(-(a0+x))-sp(b0-x))*h}
+    return JT*sum;
+  }
+  const rhoOhm=kT/(JT*Math.exp(-Math.max(dEdge,0)/kT));
+  const Vlo=-1.5,Vhi=1.0;
+  const curve=tun=>{const pts=[];
+    if(!barrier){for(let i=0;i<=120;i++){const V=Vlo+(Vhi-Vlo)*i/120;pts.push([V,V/(rhoOhm+Rs)])}return pts}
+    const top=R.Vbi-0.004;let last=null;
+    for(let i=0;i<=220;i++){const Vj=Vlo+(top-Vlo)*i/220;const J=Jb(Vj,tun),V=Vj+J*Rs;if(V>Vhi){break}pts.push([V,J]);last=[V,J,Vj]}
+    if(last&&last[0]<Vhi){for(let i=1;i<=30;i++){const V=last[0]+(Vhi-last[0])*i/30;pts.push([V,last[1]+(V-last[0])/Rs])}}
+    return pts};
+  const full=curve(true),te=barrier?curve(false):null;
+  let rhoc,nid=null,Js=null,J0=null,Vop=null;
+  if(barrier){const d=1e-3;rhoc=2*d/(Jb(d,true)-Jb(-d,true));Js=Jb(-0.5,true);
+    if(R.Vbi>0.3){const a=Jb(0.1,true),b=Jb(0.2,true);if(a>0&&b>a)nid=0.1/(kT*Math.log(b/a))}
+    J0=Jb(S.V,true);Vop=S.V+J0*Rs}else{rhoc=rhoOhm;J0=0;Vop=0}
+  return {full,te,Rs,rhoc,nid,Js,J0,Vop,barrier,mu};
+}
+function drawIV(R,I){
+  const W=900,H=320,top=18,bot=H-42,px0=84,px1=884,Vlo=-1.5,Vhi=1.0;
+  const xs=v=>px0+(v-Vlo)/(Vhi-Vlo)*(px1-px0);
+  let s='';const all=I.full.concat(I.te||[]);
+  let y,yt=[],lab;
+  if(S.ivLog){
+    let mx=0;for(const [,J] of I.full)mx=Math.max(mx,Math.abs(J));
+    const hiE=Math.ceil(Math.log10(mx||1e-12)+0.3),loE=Math.max(hiE-16,-16);
+    y=J=>{const l=Math.log10(Math.max(Math.abs(J),10**(loE-1)));return bot-(l-loE)/(hiE-loE)*(bot-top)};
+    const st=(hiE-loE)>10?2:1;for(let e=loE;e<=hiE;e+=st)yt.push([10**e,`10${sup(e)}`]);
+    lab='|J| (A/cm²)';
+  }else{
+    let mx=0,mn=0;for(const [,J] of I.full){mx=Math.max(mx,J);mn=Math.min(mn,J)}
+    if(mx-mn===0)mx=1;const pad=(mx-mn)*0.08;const hi_=mx+pad,lo_=mn-pad;
+    const e=Math.floor(Math.log10(Math.max(Math.abs(hi_),Math.abs(lo_))));const f=10**e;
+    y=J=>bot-(J-lo_)/(hi_-lo_)*(bot-top);
+    for(const t of ticks(lo_/f,hi_/f,5))yt.push([t*f,(+t.toPrecision(3)).toString().replace('-','−')]);
+    lab=`J (10${sup(e)} A/cm²)`;
+  }
+  for(const [v,t] of yt){const Y=y(v);if(Y<top-1||Y>bot+1)continue;s+=L(px0,Y,px1,Y,'gr')+T(px0-7,Y+4,t,'m mut','end')}
+  for(const t of ticks(Vlo,Vhi,6)){const X=xs(t);s+=L(X,top,X,bot,'gr')+L(X,bot,X,bot+4,'ax')+T(X,bot+17,(+t.toFixed(2)).toString().replace('-','−'),'m mut','middle')}
+  s+=L(px0,top,px0,bot,'ax')+L(px0,bot,px1,bot,'ax')+L(xs(0),top,xs(0),bot,'ax');
+  if(!S.ivLog)s+=L(px0,y(0),px1,y(0),'ax');
+  s+=`<text transform="translate(18 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">${lab}</text>`;
+  s+=T(px1,bot+34,'applied V (volts) →','mut','end');
+  s+=T(xs(Vlo)+8,top+14,'reverse','mut halo')+T(xs(Vhi)-8,top+14,'forward','mut halo','end');
+  const path=pts=>{let d='';let pen=false;for(const [V,J] of pts){const Y=y(J);if(Y<top-2||Y>bot+2){pen=false;continue}d+=(pen?'L':'M')+r1(xs(V))+','+r1(Y);pen=true}return d};
+  if(I.te)s+=P(path(I.te),'ivte');
+  s+=P(path(I.full),'iv');
+  if(I.barrier){const Y=y(I.J0);if(Y>=top&&Y<=bot&&I.Vop>=Vlo&&I.Vop<=Vhi){s+=`<circle cx="${r1(xs(I.Vop))}" cy="${r1(Y)}" r="5" class="ivdot"/>`+T(xs(I.Vop)+9,Y-8,`V<tspan font-size="72%" dy="3.5">j</tspan><tspan dy="-3.5"> = ${f2(S.V)} V</tspan>`,'m halo')}}
+  if(I.te){const lx=px0+16,ly=top+40;s+=L(lx,ly,lx+26,ly,'iv')+T(lx+32,ly+4,'full model (with tunneling)','mut halo')+L(lx,ly+16,lx+26,ly+16,'ivte')+T(lx+32,ly+20,'thermionic emission only','mut halo')}
+  return svg(W,H,s,'Current–voltage characteristic of the contact');
+}
+function ivReadouts(R,I){
+  const items=[['Specific contact resistivity ρc',`${sci(I.rhoc)} Ω·cm²`],['Series resistance Rs (100 µm)',`${sci(I.Rs)} Ω·cm²`],
+    [R.isN?'Electron mobility (est.)':'Hole mobility (est.)',`${I.mu.toFixed(0)} cm²/V·s`]];
+  if(I.barrier){items.push(['|J| at −0.5 V',`${sci(Math.abs(I.Js))} A/cm²`]);items.push(['Ideality n (0.1–0.2 V)',I.nid?I.nid.toFixed(2):'—']);
+    items.push(['Rectification at ±0.3 V',(()=>{const f=I.full;const at=v=>{let b=f[0];for(const p of f)if(Math.abs(p[0]-v)<Math.abs(b[0]-v))b=p;return b[1]};const r=Math.abs(at(0.3)/at(-0.3));return isFinite(r)?sci(r):'—'})()])}
+  else items.push(['Behavior','linear (resistive)']);
+  $('ivkv').innerHTML=items.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+}
+
+/* ---------- readouts & narrative ---------- */
+function readouts(R){
+  const pill=$('pill'),sub=$('subpill');
+  let cls=R.regime,txt;
+  if(R.regime==='schottky'){
+    if(R.transport==='FE'){cls='tunnel';txt='Ohmic by tunneling'}else txt='Schottky · rectifying';
+    sub.textContent=R.transport==='FE'?`barrier exists but is only ${len(R.Wd)} thick`:R.transport==='TFE'?'thermionic-field emission':'thermionic emission';
+  }else if(R.regime==='ohmic'){txt='Ohmic · accumulation';sub.textContent=R.isN?'no barrier to electrons':'no barrier to holes'}
+  else{txt='Neutral contact';sub.textContent='φm ≈ φs, bands nearly flat'}
+  pill.className='pill '+cls;pill.textContent=txt;
+  const w=[];if(R.degenerate)w.push('Near or past degeneracy: Boltzmann statistics overestimate E_F shift');
+  if(R.inversion)w.push('Surface inversion');else if(R.invPot)w.push('Minority carriers would invert the surface: enable them under Display');
+  if(R.degSurf)w.push(`Accumulation layer is degenerate (${sci(R.surfMaj)} cm⁻³ at the surface): Boltzmann statistics overstate its charge and field`);
+  $('warns').innerHTML=w.map(x=>`<span class="warn">${x}</span>`).join(' ');
+  const items=[
+    [R.isN?'Barrier qφBn (electrons)':'Barrier qφBp (holes)',(R.isN?R.phiBn:R.phiBp)>0?`${(R.isN?R.phiBn:R.phiBp).toFixed(3)} eV`:`none (${f3(R.isN?R.phiBn:R.phiBp)} eV)`],
+    ['Built-in qVbi',`${f3(R.Vbi)} eV`],
+    R.regime==='schottky'?['Depletion width W',len(R.Wd)]:['Debye length LD',len(R.LD)],
+    ['Surface field |ℰs|',`${sci(Math.abs(R.Es))} V/cm`],
+    ['Metal charge σm',`${R.sigma<0?'−':'+'}${sci(Math.abs(R.sigma)/Q)} q/cm²`],
+    ['Image-force lowering',`${(R.dphi*1000).toFixed(1)} meV`],
+    ['E00 / kT',`${R.r00.toFixed(2)}`],
+    ['qφs (semiconductor)',`${R.phis.toFixed(3)} eV`],
+    ['E_C − E_F (bulk)',`${(R.Eg-R.EF).toFixed(3)} eV`],
+    [R.isN?'n₀ / p₀':'p₀ / n₀',R.isN?`${sci(R.n0)} / ${sci(R.p0)}`:`${sci(R.p0)} / ${sci(R.n0)}`],
+    ['Dopant ionized (bulk)',`${(R.fion*100).toFixed(R.fion>0.995?2:1)} %`],
+    ['nᵢ',`${sci(R.ni)} cm⁻³`]
+  ];
+  $('kv').innerHTML=items.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+}
+function story(R){
+  const c=R.isN?'electrons':'holes',dop=R.isN?'donors':'acceptors',d=Math.abs(S.phim-R.phis).toFixed(2);
+  let t='';
+  if(R.regime==='schottky'){
+    if(R.isN)t=`The metal work function exceeds the semiconductor's (φm − φs = ${d} eV), so on contact electrons flow from the semiconductor into the metal until the Fermi levels line up. `+
+      `The metal surface takes on a negative sheet charge and the semiconductor is left with a depletion region of uncompensated ionized ${dop} about ${len(R.Wd)} wide. `+
+      `The bands bend up by ${R.Vbi.toFixed(2)} eV, and electrons in the metal face a barrier qφBn = ${R.phiBn.toFixed(2)} eV.`;
+    else t=`The metal work function is smaller than the semiconductor's (φs − φm = ${d} eV), so electrons move from the metal into the p-type semiconductor and fill acceptor states. `+
+      `The metal surface becomes positive and a depletion region of negatively ionized ${dop} about ${len(R.Wd)} wide forms. `+
+      `The bands bend down by ${R.Vbi.toFixed(2)} eV and holes face a barrier qφBp = ${R.phiBp.toFixed(2)} eV.`;
+    if(R.transport==='FE')t+=` At this doping the barrier is so thin (E00/kT = ${R.r00.toFixed(1)}) that ${c} tunnel straight through it, so the contact behaves ohmically. This is how most practical ohmic contacts are made.`;
+    else if(R.transport==='TFE')t+=` Doping is high enough (E00/kT = ${R.r00.toFixed(2)}) that ${c} tunnel through the thinner upper part of the barrier, lowering the effective barrier.`;
+    else t+=` Current flows by thermionic emission over the barrier, so the contact rectifies.`;
+    if(R.V>1e-9)t+=` Forward bias of ${R.V.toFixed(2)} V reduces the band bending to ${(R.Vbi-R.V).toFixed(2)} eV and narrows W, so ${c} from the semiconductor cross far more easily.`;
+    else if(R.V<-1e-9)t+=` Reverse bias of ${Math.abs(R.V).toFixed(2)} V raises the band bending to ${(R.Vbi-R.V).toFixed(2)} eV and widens W. The barrier seen from the metal is unchanged, which is why the reverse current saturates.`;
+    if(R.inversion)t+=` The bending is large enough that minority carriers outnumber majority carriers at the surface: an inversion layer forms.`;
+  }else if(R.regime==='ohmic'){
+    if(R.isN)t=`Here φm < φs by ${d} eV, so electrons flow from the metal into the semiconductor. The metal surface becomes positive and an electron accumulation layer, thinner than the Debye length (${len(R.LD)}), forms at the interface. The bands bend down, leaving no barrier to electrons in either direction: the contact is ohmic.`;
+    else t=`Here φm > φs by ${d} eV, so electrons leave the semiconductor for the metal, which is equivalent to holes flowing into the semiconductor. The metal becomes negative and a hole accumulation layer forms within about a Debye length (${len(R.LD)}). The bands bend up, leaving no barrier to holes: the contact is ohmic.`;
+  }else t=`The work functions nearly match (|φm − φs| = ${d} eV), so very little charge has to move to align the Fermi levels and the bands stay almost flat. This is a neutral contact.`;
+  if(S.pin<0.999)t+=` Interface states pin the Fermi level (S = ${S.pin.toFixed(2)}), so the barrier depends only weakly on the metal. The vacuum level steps by ${f2(R.dip)} eV at the interface, an interface dipole that Schottky–Mott theory ignores.`;
+  $('story').textContent=t;
+}
+
+/* ---------- UI wiring ---------- */
+function fillDopants(){const ds=SEMIS[S.semi][S.type];if(!(S.dopant in ds))S.dopant=Object.keys(ds)[0];
+  $('dopSel').innerHTML=Object.entries(ds).map(([k,v])=>`<option value="${k}" ${k===S.dopant?'selected':''}>${k} · ${(v*1000).toFixed(v<0.01?1:0)} meV</option>`).join('')}
+function syncMetalSel(){const hit=Object.entries(METALS).find(([k,v])=>Math.abs(v-S.phim)<0.005&&k===S.metal)||Object.entries(METALS).find(([k,v])=>Math.abs(v-S.phim)<0.005);
+  S.metal=hit?hit[0]:'custom';$('metalSel').value=S.metal}
+function update(){
+  const R=compute();const m=R.m;
+  $('phim').value=S.phim;$('phimO').textContent=S.phim.toFixed(2)+' eV';
+  $('Eg').value=S.Eg;$('EgO').textContent=S.Eg.toFixed(2)+' eV';$('EgTag').textContent=Math.abs(S.Eg-m.Eg)>0.004?'modified':'';
+  $('chi').value=S.chi;$('chiO').textContent=S.chi.toFixed(2)+' eV';$('chiTag').textContent=Math.abs(S.chi-m.chi)>0.004?'modified':'';
+  $('typeN').setAttribute('aria-pressed',R.isN);$('typeP').setAttribute('aria-pressed',!R.isN);
+  $('logNLbl').innerHTML=R.isN?'Concentration N<sub>D</sub>':'Concentration N<sub>A</sub>';
+  $('logN').value=S.logN;$('logNO').textContent=sci(R.N)+' cm⁻³';
+  $('EF').max=S.Eg.toFixed(3);$('EF').value=R.EF;$('EFO').textContent=R.EF.toFixed(3)+' eV';
+  $('EFhint').textContent=`E_C − E_F = ${(S.Eg-R.EF).toFixed(3)} eV. Moving E_F sets the doping.`;
+  $('pin').value=S.pin;$('pinO').textContent=S.pin.toFixed(2);
+  const vs=$('V');vs.disabled=R.regime!=='schottky';vs.min=-3;vs.max=R.regime==='schottky'?R.Vmax:0.5;vs.value=S.V;
+  $('VO').textContent=(S.V>=0?'+':'−')+Math.abs(S.V).toFixed(2)+' V';
+  $('Vhint').textContent=R.regime==='schottky'?`Bias across the barrier itself; the applied voltage in Fig. 5 adds the series-resistance drop. Positive is forward (limit ${R.Vmax.toFixed(2)} V, just under V_bi).`:'Bias applies to rectifying contacts only.';
+  $('f2cap').innerHTML=`Fig. 2 · In contact<small>${Math.abs(S.V)>1e-9?(S.V>0?'forward':'reverse')+' bias '+Math.abs(S.V).toFixed(2)+' V':'thermal equilibrium, E<sub>F</sub> flat'}</small>`;
+  $('f1').innerHTML=drawBefore(R);$('f2').innerHTML=drawAfter(R);$('f3').innerHTML=drawCharge(R);$('f4').innerHTML=drawField(R);
+  readouts(R);story(R);
+  const I=ivModel(R);$('f5').innerHTML=drawIV(R,I);ivReadouts(R,I);
+  $('ivLog').setAttribute('aria-pressed',S.ivLog);$('ivLin').setAttribute('aria-pressed',!S.ivLog);
+}
+function setSemi(name,keep){S.semi=name;const m=SEMIS[name];if(!keep){S.chi=m.chi;S.Eg=m.Eg}fillDopants();$('semiSel').value=name}
+function init(){
+  $('metalSel').innerHTML=Object.entries(METALS).map(([k,v])=>`<option value="${k}">${k} · ${v.toFixed(2)} eV</option>`).join('')+'<option value="custom">Custom</option>';
+  $('semiSel').innerHTML=Object.entries(SEMIS).map(([k,v])=>`<option value="${k}">${k} · Eg ${v.Eg.toFixed(2)} eV, χ ${v.chi.toFixed(2)} eV</option>`).join('');
+  $('metalSel').value=S.metal;$('semiSel').value=S.semi;fillDopants();
+  $('metalSel').onchange=e=>{if(e.target.value!=='custom'){S.metal=e.target.value;S.phim=METALS[S.metal]}else S.metal='custom';update()};
+  $('phim').oninput=e=>{S.phim=+e.target.value;syncMetalSel();update()};
+  $('semiSel').onchange=e=>{setSemi(e.target.value);update()};
+  $('Eg').oninput=e=>{S.Eg=+e.target.value;update()};
+  $('chi').oninput=e=>{S.chi=+e.target.value;update()};
+  $('typeN').onclick=()=>{S.type='n';S.V=0;fillDopants();update()};
+  $('typeP').onclick=()=>{S.type='p';S.V=0;fillDopants();update()};
+  $('dopSel').onchange=e=>{S.dopant=e.target.value;update()};
+  $('logN').oninput=e=>{S.logN=+e.target.value;update()};
+  $('EF').oninput=e=>{S.logN=logNforEF(+e.target.value);update()};
+  $('pin').oninput=e=>{S.pin=+e.target.value;update()};
+  $('V').oninput=e=>{S.V=+e.target.value;update()};
+  $('showVac').onchange=e=>{S.showVac=e.target.checked;update()};
+  $('showCar').onchange=e=>{S.showCar=e.target.checked;update()};
+  $('showEi').onchange=e=>{S.showEi=e.target.checked;update()};
+  $('minor').onchange=e=>{S.minor=e.target.checked;update()};
+  $('ivLog').onclick=()=>{S.ivLog=true;update()};$('ivLin').onclick=()=>{S.ivLog=false;update()};
+  const pr=$('presets');
+  for(const [lbl,p] of PRESETS){const b=document.createElement('button');b.className='chip';b.textContent=lbl;
+    b.onclick=()=>{S.type=p.type;S.dopant=p.dopant;setSemi(p.semi);S.dopant=p.dopant;fillDopants();S.logN=p.logN;S.metal=p.metal;S.phim=METALS[p.metal];$('metalSel').value=p.metal;S.pin=p.pin;S.V=0;update()};pr.appendChild(b)}
+  update();
+}
+init();
+</script>
+<script>
+/* ===================== Semiconductor–semiconductor junctions ===================== */
+(function(){
+const JM={
+ Si:{chi:4.05,Eg:1.12,er:11.7,Nc:2.8e19,Nv:1.04e19,me:0.26,mh:0.39,mun:1400,mup:450,tau:1e-6,n:{P:0.045,As:0.054,Sb:0.039},p:{B:0.045,Al:0.057,Ga:0.065}},
+ Ge:{chi:4.0,Eg:0.66,er:16.0,Nc:1.04e19,Nv:6.0e18,me:0.12,mh:0.21,mun:3900,mup:1900,tau:1e-6,n:{P:0.012,As:0.0127,Sb:0.0096},p:{B:0.0104,Ga:0.0108}},
+ GaAs:{chi:4.07,Eg:1.424,er:12.9,Nc:4.7e17,Nv:9.0e18,me:0.067,mh:0.45,mun:8500,mup:400,tau:1e-8,n:{Si:0.0058,Te:0.0058},p:{Be:0.028,Zn:0.031,C:0.027}},
+ AlGaAs:{chi:3.74,Eg:1.798,er:12.05,Nc:7.0e17,Nv:1.1e19,me:0.092,mh:0.58,mun:2300,mup:250,tau:1e-8,n:{Si:0.010,Te:0.010},p:{Be:0.03,C:0.03}},
+ AlAs:{chi:3.5,Eg:2.16,er:10.06,Nc:1.5e19,Nv:1.7e19,me:0.26,mh:0.5,mun:200,mup:100,tau:1e-7,n:{Si:0.06,Te:0.05},p:{Be:0.03,C:0.03}},
+ InP:{chi:4.38,Eg:1.344,er:12.5,Nc:5.7e17,Nv:1.1e19,me:0.08,mh:0.6,mun:5400,mup:200,tau:1e-8,n:{S:0.0057,Si:0.0057,Sn:0.0057},p:{Zn:0.035,Be:0.03}},
+ InGaAs:{chi:4.51,Eg:0.75,er:13.9,Nc:2.1e17,Nv:7.7e18,me:0.041,mh:0.45,mun:12000,mup:300,tau:1e-8,n:{Si:0.005},p:{Zn:0.02,Be:0.02}},
+ InAs:{chi:4.9,Eg:0.354,er:15.15,Nc:8.7e16,Nv:6.6e18,me:0.023,mh:0.41,mun:30000,mup:450,tau:1e-8,n:{S:0.002,Te:0.002},p:{Zn:0.01,Be:0.01}},
+ GaSb:{chi:4.06,Eg:0.726,er:15.7,Nc:2.1e17,Nv:1.8e19,me:0.041,mh:0.4,mun:3000,mup:1000,tau:1e-8,n:{Te:0.02},p:{Zn:0.03,Be:0.03}},
+ GaN:{chi:4.1,Eg:3.4,er:8.9,Nc:2.3e18,Nv:4.6e19,me:0.2,mh:1.0,mun:1000,mup:30,tau:1e-9,n:{Si:0.015,Ge:0.019},p:{Mg:0.17}},
+ AlGaN:{chi:3.76,Eg:3.89,er:8.8,Nc:2.6e18,Nv:5.0e19,me:0.23,mh:1.0,mun:300,mup:10,tau:1e-9,n:{Si:0.03},p:{Mg:0.25}},
+ '4H-SiC':{chi:3.6,Eg:3.26,er:9.7,Nc:1.7e19,Nv:2.5e19,me:0.38,mh:1.0,mun:900,mup:120,tau:1e-7,n:{N:0.061,P:0.08},p:{Al:0.20,B:0.30}}
+};
+const NAMES={AlGaAs:'Al₀.₃Ga₀.₇As',InGaAs:'In₀.₅₃Ga₀.₄₇As',AlGaN:'Al₀.₂₅Ga₀.₇₅N'};
+const nm=k=>NAMES[k]||k;
+const JS={A:{mat:'Si',type:'p',dop:'B',logN:16,Eg:1.12,chi:4.05},B:{mat:'Si',type:'n',dop:'P',logN:16,Eg:1.12,chi:4.05},
+  sig:0,V:0,showVac:false,showCar:true,showEi:false,zoom:1,ivLog:true};
+const JPRE=[
+ ['Si p–n',{A:['Si','p','B',16],B:['Si','n','P',16]}],
+ ['Si p⁺–n one-sided',{A:['Si','p','B',19],B:['Si','n','P',15.5]}],
+ ['Si n⁺–n high–low',{A:['Si','n','P',18.5],B:['Si','n','P',15]}],
+ ['P-AlGaAs / n-GaAs',{A:['AlGaAs','p','Be',17.3],B:['GaAs','n','Si',16.5]}],
+ ['N-AlGaAs / n-GaAs · accumulation',{A:['AlGaAs','n','Si',18],B:['GaAs','n','Si',14],zoom:100}],
+ ['p-InGaAs / N-InP',{A:['InGaAs','p','Zn',17],B:['InP','n','S',17]}],
+ ['p-GaN:Mg / n-GaN',{A:['GaN','p','Mg',19],B:['GaN','n','Si',17.5]}],
+ ['AlGaN / GaN · polarization',{A:['AlGaN','n','Si',16],B:['GaN','n','Si',16],sig:13,zoom:10}],
+ ['p-Ge / n-Si · staggered',{A:['Ge','p','Ga',17],B:['Si','n','P',17]}],
+ ['n-InAs / p-GaSb · broken gap',{A:['InAs','n','S',16],B:['GaSb','p','Zn',17]}]
+];
+const $=id=>document.getElementById(id);
+const CQ=Math.sqrt(2*Q*VT);let ivKey=null,ivCache=null;
+
+/* ---------- rail ---------- */
+function sideHTML(k,title){return `<fieldset>
+  <legend>${title}</legend>
+  <div class="ctl"><select id="j${k}mat" aria-label="${title} material"></select></div>
+  <div class="seg" role="group" aria-label="${title} doping type"><button id="j${k}tn" aria-pressed="false">n-type</button><button id="j${k}tp" aria-pressed="false">p-type</button></div>
+  <div class="ctl"><label for="j${k}dop">Dopant · ionization energy</label><select id="j${k}dop"></select></div>
+  <div class="ctl"><div class="row"><label for="j${k}N" id="j${k}NL">Concentration</label><output id="j${k}NO"></output></div>
+    <input type="range" id="j${k}N" min="13" max="20.3" step="0.05"></div>
+  <div class="ctl"><div class="row"><label for="j${k}EF">Fermi level E<sub>F</sub> − E<sub>V</sub></label><output id="j${k}EFO"></output></div>
+    <input type="range" id="j${k}EF" min="0" max="1.12" step="0.002"></div>
+  <div class="ctl"><div class="row"><label for="j${k}Eg">Band gap E<sub>g</sub> <span class="tag" id="j${k}EgT"></span></label><output id="j${k}EgO"></output></div>
+    <input type="range" id="j${k}Eg" min="0.2" max="4.5" step="0.01"></div>
+  <div class="ctl"><div class="row"><label for="j${k}chi">Electron affinity qχ <span class="tag" id="j${k}chiT"></span></label><output id="j${k}chiO"></output></div>
+    <input type="range" id="j${k}chi" min="3.0" max="5.2" step="0.01"></div>
+</fieldset>`}
+
+/* ---------- physics ---------- */
+function jside(sd){
+  const m=JM[sd.mat],isN=sd.type==='n',N=10**sd.logN,dE=m[sd.type][sd.dop],Eg=sd.Eg,chi=sd.chi;
+  const EF=solveEF(m,sd.type,N,dE,Eg);
+  const n0=m.Nc*Math.exp((EF-Eg)/VT),p0=m.Nv*Math.exp(-EF/VT);
+  const ni=Math.sqrt(m.Nc*m.Nv)*Math.exp(-Eg/(2*VT)),Ei=Eg/2+VT/2*Math.log(m.Nv/m.Nc);
+  const a=(EF-(Eg-dE))/VT,b=(dE-EF)/VT;
+  const fion=isN?1/(1+2*Math.exp(a)):1/(1+4*Math.exp(b));
+  const eps=m.er*EPS0,nmaj=isN?n0:p0;
+  return {m,isN,N,dE,Eg,chi,EF,n0,p0,ni,Ei,a,b,fion,eps,nmaj,phi:chi+Eg-EF,
+    deg:isN?(Eg-EF)<2*VT:EF<2*VT,LD:Math.sqrt(eps*VT/(Q*nmaj)),type:sd.type,mat:sd.mat,dop:sd.dop};
+}
+function jfun(s,eq){
+  const {isN,n0,p0,N,a,b}=s,eFull=isN||eq,hFull=!isN||eq;
+  const B=u=>{const Bn=eFull?-n0*Math.expm1(u):-n0*u;const Bp=hFull?-p0*Math.expm1(-u):p0*u;
+    const I=isN?N*(u-(sp(a+u+LN2)-sp(a+LN2))):-N*((u+sp(b-u+LN4))-sp(b+LN4));return Bn+Bp+I};
+  const rho=u=>{const n=eFull?n0*Math.exp(u):n0,p=hFull?p0*Math.exp(-u):p0;
+    const ion=isN?N/(1+2*Math.exp(a+u)):-N/(1+4*Math.exp(b-u));return p-n+ion};
+  const nAt=u=>eFull?n0*Math.exp(u):n0, pAt=u=>hFull?p0*Math.exp(-u):p0;
+  const k=Math.sqrt(2*Q/(s.eps*VT));
+  const fu=u=>u===0?0:-Math.sign(u)*k*Math.sqrt(Math.max(0,-B(u)));
+  const G=u=>u===0?0:Math.sign(u)*Math.sqrt(s.eps*Math.max(0,-B(u)));
+  return {B,rho,fu,G,nAt,pAt};
+}
+function iface(A,B,FA,FB,V,sigma){
+  const d=(B.phi-A.phi+V)/VT,t=sigma/CQ;
+  let lo=Math.min(0,d)-200,hi=Math.max(0,d)+200;
+  const f=u=>FA.G(u-d)+FB.G(u)-t;
+  const ok=f(lo)<0&&f(hi)>0;
+  for(let i=0;i<54;i++){const mid=(lo+hi)/2,v=f(mid);if(v<0)lo=mid;else hi=mid}
+  const uB=(lo+hi)/2;return {uB,uA:uB-d,d,ok};
+}
+function integ(fu,u0,L){
+  const X=[0],U=[u0];let x=0,u=u0;const hmax=L/500,hmin=L*1e-7;
+  while(x<L&&X.length<8000&&Math.abs(u)>1e-5){
+    const d=fu(u);let h=0.03*Math.max(Math.abs(u),0.05)/Math.max(Math.abs(d),1e-30);h=Math.min(hmax,Math.max(hmin,h));
+    const k1=fu(u),k2=fu(u+h/2*k1),k3=fu(u+h/2*k2),k4=fu(u+h*k3);
+    let un=u+h/6*(k1+2*k2+2*k3+k4);if(un*u<0)un=0;x+=h;u=un;X.push(x);U.push(u);
+  }
+  if(x<L&&Math.abs(u)<=1e-5){X.push(L);U.push(0)}
+  return {X,U};
+}
+const depW=(s,u0)=>{const dep=s.isN?u0<0:u0>0;return dep?Math.sqrt(2*s.eps*Math.max(Math.abs(u0)*VT-VT,VT)/(Q*s.N)):0};
+function align(A,B,homo){
+  if(homo)return {key:'homo',name:'Homojunction',short:'no band offsets'};
+  const cA=-A.chi,vA=cA-A.Eg,cB=-B.chi,vB=cB-B.Eg;
+  if((cA>=cB&&vA<=vB)||(cB>=cA&&vB<=vA))return {key:'I',name:'Type I · straddling',short:'one gap nests inside the other'};
+  if(cA<vB||cB<vA)return {key:'III',name:'Type III · broken gap',short:'one conduction band sits below the other valence band'};
+  return {key:'II',name:'Type II · staggered',short:'both band edges step the same way'};
+}
+function jcompute(){
+  const A=jside(JS.A),B=jside(JS.B);
+  const homo=JS.A.mat===JS.B.mat&&Math.abs(A.Eg-B.Eg)<1e-3&&Math.abs(A.chi-B.chi)<1e-3;
+  const aniso=A.type!==B.type;
+  const sigma=JS.sig*1e12*Q;
+  const Vbi0=A.phi-B.phi;
+  let vlo=-3,vhi=3;
+  if(Vbi0>0.1)vhi=Math.floor((Vbi0-0.05)*100)/100;else if(Vbi0<-0.1)vlo=Math.ceil((Vbi0+0.05)*100)/100;else{vlo=-1;vhi=1}
+  JS.V=Math.min(Math.max(JS.V,vlo),vhi);
+  const V=JS.V,eq=Math.abs(V)<1e-9;
+  const FA=jfun(A,eq),FB=jfun(B,eq);
+  const I=iface(A,B,FA,FB,V,sigma);
+  const WA=depW(A,I.uA),WB=depW(B,I.uB);
+  const sc=(s,w)=>w>0?1.6*w:8*s.LD;
+  const Lauto=Math.max(sc(A,WA),sc(B,WB));
+  const L=Lauto/JS.zoom;
+  const PA=integ(FA.fu,I.uA,L),PB=integ(FB.fu,I.uB,L);
+  const EcA=-V+A.Eg-A.EF,EcB=B.Eg-B.EF;
+  const EcA0=EcA-VT*I.uA,EcB0=EcB-VT*I.uB;
+  const EA0=VT*FA.fu(I.uA),EB0=-VT*FB.fu(I.uB);
+  const QA=A.eps*EA0,QB=-B.eps*EB0;
+  const acc=(F,P,s,c)=>{let t=0;const bulk=c==='n'?F.nAt(0):F.pAt(0);
+    for(let i=1;i<P.X.length;i++){const f=u=>Math.max((c==='n'?F.nAt(u):F.pAt(u))-bulk,0);t+=(f(P.U[i])+f(P.U[i-1]))/2*(P.X[i]-P.X[i-1])}return t};
+  const nsA=A.isN?acc(FA,PA,A,'n'):0,nsB=B.isN?acc(FB,PB,B,'n'):0,psA=A.isN?0:acc(FA,PA,A,'p'),psB=B.isN?0:acc(FB,PB,B,'p');
+  const EvA=EcA-A.Eg,EvB=EcB-B.Eg,EvA0=EcA0-A.Eg,EvB0=EcB0-B.Eg;
+  const cSpike=Math.max(EcA0,EcB0)-Math.max(EcA,EcB);
+  const vSpike=Math.min(EvA,EvB)-Math.min(EvA0,EvB0);
+  const al=align(A,B,homo);
+  const satA=(A.isN&&I.uA*VT>A.Eg-A.EF)||(!A.isN&&-I.uA*VT>A.EF);
+  const satB=(B.isN&&I.uB*VT>B.Eg-B.EF)||(!B.isN&&-I.uB*VT>B.EF);
+  const invA=eq&&!aniso&&(A.isN?FA.pAt(I.uA)>FA.nAt(I.uA):FA.nAt(I.uA)>FA.pAt(I.uA));
+  const invB=eq&&!aniso&&(B.isN?FB.pAt(I.uB)>FB.nAt(I.uB):FB.nAt(I.uB)>FB.pAt(I.uB));
+  return {A,B,homo,aniso,sigma,Vbi0,vlo,vhi,V,eq,FA,FB,I,WA,WB,L,PA,PB,EcA,EcB,EcA0,EcB0,EvA,EvB,EvA0,EvB0,
+    EA0,EB0,QA,QB,nsA,nsB,psA,psB,cSpike,vSpike,al,degAcc:satA||satB,invA,invB};
+}
+
+/* ---------- I–V ---------- */
+function jIV(R){
+  const A=R.A,B=R.B,t=100e-4,T2=9e4;
+  const mu=(s,c)=>(c==='n'?s.m.mun:s.m.mup)/(1+Math.sqrt(s.N/1e17));
+  const Rs=t/(Q*A.nmaj*mu(A,A.type))+t/(Q*B.nmaj*mu(B,B.type));
+  const coef=(s,c)=>{const D=mu(s,c)*VT,Lm=Math.sqrt(D*s.m.tau);return Q*D/Math.min(Lm,t)*(c==='n'?s.m.Nc:s.m.Nv)};
+  const cnA=A.isN?0:coef(A,'n'),cnB=B.isN?0:coef(B,'n'),cpA=A.isN?coef(A,'p'):0,cpB=B.isN?coef(B,'p'):0;
+  const AsN=120*Math.min(A.m.me,B.m.me)*T2,AsP=120*Math.min(A.m.mh,B.m.mh)*T2;
+  const FA=jfun(A,false),FB=jfun(B,false);
+  const sgnF=R.aniso?(A.isN?-1:1):0;
+  const at=Vj=>{
+    const I=iface(A,B,FA,FB,Vj,R.sigma);
+    const EcA=-Vj+A.Eg-A.EF,EcB=B.Eg-B.EF,EvA=EcA-A.Eg,EvB=EcB-B.Eg;
+    const EcA0=EcA-VT*I.uA,EcB0=EcB-VT*I.uB,EvA0=EcA0-A.Eg,EvB0=EcB0-B.Eg;
+    const Etop=Math.max(EcA,EcA0,EcB0,EcB),Ebot=Math.min(EvA,EvA0,EvB0,EvB);
+    let inv=1/(AsN*Math.exp(-Etop/VT));if(cnA)inv+=1/(cnA*Math.exp(-EcA/VT));if(cnB)inv+=1/(cnB*Math.exp(-EcB/VT));
+    const Jn=-Math.expm1(-Vj/VT)/inv;
+    let ip=1/(AsP*Math.exp(Ebot/VT));if(cpA)ip+=1/(cpA*Math.exp(EvA/VT));if(cpB)ip+=1/(cpB*Math.exp(EvB/VT));
+    const Jp=Math.expm1(Vj/VT)/ip;
+    let Jgr=0;
+    if(sgnF){const g=Q/2*(A.ni*depW(A,I.uA)/A.m.tau+B.ni*depW(B,I.uB)/B.m.tau);Jgr=sgnF*g*Math.expm1(sgnF*Vj/(2*VT))}
+    return {Jn,Jp,Jgr,J:Jn+Jp+Jgr};
+  };
+  const Vbi=R.Vbi0;let Vlo,Vhi,jlo,jhi;
+  if(Vbi>0.1){Vlo=-2;Vhi=Math.max(1,Vbi+0.6);jlo=Vlo;jhi=Vbi-0.02}
+  else if(Vbi<-0.1){Vlo=Math.min(-1,Vbi-0.6);Vhi=2;jlo=Vbi+0.02;jhi=Vhi}
+  else{Vlo=-1.5;Vhi=1.5;jlo=Vlo;jhi=Vhi}
+  const pts=[],tot=[];
+  const app=Vj=>{const r=at(Vj);return {V:Vj+r.J*Rs,Vj,...r}};
+  const e0=app(jlo),e1=app(jhi);
+  for(let i=0;i<=140;i++){const V=Vlo+(Vhi-Vlo)*i/140;
+    if(V>e1.V){if(Vbi>0.1)tot.push([V,e1.J+(V-e1.V)/Rs]);continue}
+    if(V<e0.V){if(Vbi<-0.1)tot.push([V,e0.J+(V-e0.V)/Rs]);continue}
+    let a=jlo,b=jhi;for(let k=0;k<30;k++){const m=(a+b)/2;if(app(m).V<V)a=m;else b=m}
+    const p=app((a+b)/2);p.V=V;pts.push(p);tot.push([V,p.J])}
+  const op=null;
+  const fwd=sgnF||Math.sign(Vbi)||1;
+  let nid=null;{const a=at(fwd*0.1).J,b=at(fwd*0.2).J;if(a*fwd>0&&b*fwd>a*fwd)nid=0.1/(VT*Math.log(b/a))}
+  const Jrev=at(-fwd*1).J;
+  let Von=null,inj=null;for(const p of pts){if(Math.abs(p.J)>=1&&Math.sign(p.V)===fwd){if(Von===null||Math.abs(p.V)<Math.abs(Von)){Von=p.V;inj=Math.abs(p.Jn/p.Jp)}}}
+  return {pts,tot,Rs,Vlo,Vhi,at,nid,Jrev,Von,inj,fwd,sgnF};
+}
+
+/* ---------- drawing ---------- */
+const lbl=(s,o,homo)=>`${homo?s.type:(s.Eg>o.Eg+1e-3?s.type.toUpperCase():s.type)}`;
+const sideName=(s)=>`${s.type}-${nm(s.mat)}`;
+function jdrawBefore(R){
+  const A=R.A,B=R.B,W=460,H=440,top=24,bot=H-34;
+  const EcA=-A.chi,EvA=EcA-A.Eg,EfA=-A.phi,EcB=-B.chi,EvB=EcB-B.Eg,EfB=-B.phi;
+  const Emin=Math.min(EvA,EvB,EfA,EfB)-0.35,Emax=0.35;
+  const y=E=>top+(Emax-E)/(Emax-Emin)*(bot-top);
+  const ax0=14,ax1=166,bx0=294,bx1=446,gm=230;
+  let s=L(ax0,y(0),bx1,y(0),'vac')+T(bx1,y(0)-6,sb('E','vac'),'mut','end');
+  const block=(x0,x1,Ec,Ev,Ef,S,left)=>{
+    let o=L(x0,y(Ec),x1,y(Ec),'band')+L(x0,y(Ev),x1,y(Ev),'band')+L(x0,y(Ef),x1,y(Ef),'ef');
+    if(S.dE>0.09){const lv=S.isN?Ec-S.dE:Ev+S.dE;o+=L(x0,y(lv),x1,y(lv),'lvl')}
+    if(JS.showEi)o+=L(x0,y(Ev+S.Ei),x1,y(Ev+S.Ei),'ei');
+    const ex=left?x0:x1,an=left?'start':'end';
+    o+=T(ex,y(Ec)-6,sb('E','C'),'halo',an)+T(ex,y(Ev)+16,sb('E','V'),'halo',an);
+    const efOff=S.isN?((Ec-Ef)<0.2?14:-5):((Ef-Ev)<0.2?-5:14);
+    o+=T(left?x1:x0,y(Ef)+efOff,sb('E','F'),'halo',left?'end':'start');
+    const d=left?1:-1,xa=left?x0+26:x1-26,xb=left?x0+110:x1-110,xg=left?x0+62:x1-62,ta=left?'start':'end';
+    o+=arrow(xa,y(0),y(Ec))+T(xa+d*7,(y(0)+y(Ec))/2+4,`qχ = ${S.chi.toFixed(2)}`,'m halo',ta);
+    o+=arrow(xb,y(0),y(Ef))+T(xb+d*7,(y(0)+y(Ef))/2+16,`qφ = ${S.phi.toFixed(2)}`,'m halo',ta);
+    o+=arrow(xg,y(Ec),y(Ev))+T(xg+d*7,(y(Ec)+y(Ev))/2+4,`E<tspan font-size="72%" dy="3.5">g</tspan><tspan dy="-3.5"> = ${S.Eg.toFixed(2)}</tspan>`,'m halo',ta);
+    o+=T((x0+x1)/2,bot+20,`${sideName(S)} : ${S.dop}`,'mut','middle');
+    return o};
+  s+=block(ax0,ax1,EcA,EvA,EfA,A,true)+block(bx0,bx1,EcB,EvB,EfB,B,false);
+  // offsets
+  const ex=gm+22;
+  s+=L(ax1,y(EcA),ex+6,y(EcA),'guide')+L(ex-6,y(EcB),bx0,y(EcB),'guide')+L(ax1,y(EvA),ex+6,y(EvA),'guide')+L(ex-6,y(EvB),bx0,y(EvB),'guide');
+  if(!R.homo){
+    s+=arrow(ex,y(EcA),y(EcB))+T(ex,Math.min(y(EcA),y(EcB))-6,`ΔE<tspan font-size="72%" dy="3.5">C</tspan><tspan dy="-3.5"> = ${Math.abs(EcA-EcB).toFixed(2)}</tspan>`,'m halo','middle');
+    s+=arrow(ex,y(EvA),y(EvB))+T(ex,Math.max(y(EvA),y(EvB))+16,`ΔE<tspan font-size="72%" dy="3.5">V</tspan><tspan dy="-3.5"> = ${Math.abs(EvA-EvB).toFixed(2)}</tspan>`,'m halo','middle');
+  }
+  const fx=gm-24;
+  s+=L(ax1,y(EfA),fx+6,y(EfA),'guide')+L(fx-6,y(EfB),bx0,y(EfB),'guide');
+  s+=arrow(fx,y(EfA),y(EfB))+T(fx+7,(y(EfA)+y(EfB))/2+4,`Δφ = ${sgn(A.phi-B.phi)}`,'m halo','start');
+  return svg(W,H,s,'Band diagrams of the two semiconductors before contact');
+}
+function sideXY(P,neg){const X=[],U=[];for(let i=0;i<P.X.length;i++){X.push(neg?-P.X[i]:P.X[i]);U.push(P.U[i])}return {X,U}}
+function jdrawAfter(R){
+  const A=R.A,B=R.B,W=640,H=440,top=22,bot=H-50,px0=62,px1=628,Lx=R.L;
+  const xs=x=>px0+(x+Lx)/(2*Lx)*(px1-px0),x0=xs(0);
+  const EcAx=R.PA.U.map(u=>R.EcA-VT*u),EcBx=R.PB.U.map(u=>R.EcB-VT*u);
+  const EvAx=EcAx.map(e=>e-A.Eg),EvBx=EcBx.map(e=>e-B.Eg);
+  const EFA=-R.V,EFB=0;
+  let lo=Math.min(...EvAx,...EvBx,EFA,EFB),hi=Math.max(...EcAx,...EcBx,EFA,EFB);
+  if(JS.showVac)hi=Math.max(hi,...EcAx.map(e=>e+A.chi),...EcBx.map(e=>e+B.chi));
+  lo-=0.3;hi+=0.3;
+  const y=E=>top+(hi-E)/(hi-lo)*(bot-top);
+  let s='';
+  const xu=xUnit(Lx);
+  s+=`<rect x="${r1(px0)}" y="${top}" width="${r1(x0-px0)}" height="${bot-top}" class="sideA"/>`;
+  s+=L(px0,bot,px1,bot,'ax');
+  for(const t of ticks(-Lx*xu.f,Lx*xu.f,6)){const X=xs(t/xu.f);s+=L(X,bot,X,bot+4,'ax')+T(X,bot+17,(+t.toPrecision(4)).toString().replace('-','−'),'m mut','middle')}
+  s+=T(px1,bot+36,`x (${xu.u}) →`,'mut','end');
+  s+=L(px0,top,px0,bot,'ax');
+  for(const t of ticks(lo,hi,6)){const Y=y(t);s+=L(px0-4,Y,px0,Y,'ax')+T(px0-7,Y+4,(+t.toFixed(2)).toString().replace('-','−'),'m mut','end')}
+  s+=`<text transform="translate(16 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">E − E<tspan font-size="72%" dy="3">F,right</tspan><tspan dy="-3"> (eV)</tspan></text>`;
+  s+=L(x0,top,x0,bot,'guide');
+  s+=T((px0+x0)/2,bot-8,sideName(A),'mut halo','middle')+T((x0+px1)/2,bot-8,sideName(B),'mut halo','middle');
+  const sel=(P,neg)=>{const idx=[];let last=-1e9;for(let i=0;i<P.X.length;i++){const X=xs(neg?-P.X[i]:P.X[i]);if(Math.abs(X-last)>=0.6||i===P.X.length-1){idx.push(i);last=X}}return idx};
+  const iA=sel(R.PA,true),iB=sel(R.PB,false);
+  const ptsA=arr=>iA.slice().reverse().map(i=>`${r1(xs(-R.PA.X[i]))},${r1(y(arr[i]))}`);
+  const ptsB=arr=>iB.map(i=>`${r1(xs(R.PB.X[i]))},${r1(y(arr[i]))}`);
+  const both=(a,b)=>P('M'+ptsA(a).join('L')+'L'+ptsB(b).join('L'),'');
+  const both2=(a,b,c)=>`<path d="M${ptsA(a).join('L')}L${ptsB(b).join('L')}" class="${c}"/>`;
+  if(JS.showVac){const va=EcAx.map(e=>e+A.chi),vb=EcBx.map(e=>e+B.chi);s+=both2(va,vb,'vac')+T(px1,y(vb[vb.length-1])-6,sb('E','vac'),'mut halo','end')}
+  if(JS.showEi){const ea=EvAx.map(e=>e+A.Ei),eb=EvBx.map(e=>e+B.Ei);s+=`<path d="M${ptsA(ea).join('L')}" class="ei"/><path d="M${ptsB(eb).join('L')}" class="ei"/>`}
+  const lvl=(S,Ec,Ev)=>S.dE>0.09?(S.isN?Ec.map(e=>e-S.dE):Ev.map(e=>e+S.dE)):null;
+  const la=lvl(A,EcAx,EvAx),lb=lvl(B,EcBx,EvBx);
+  if(la)s+=`<path d="M${ptsA(la).join('L')}" class="lvl"/>`;if(lb)s+=`<path d="M${ptsB(lb).join('L')}" class="lvl"/>`;
+  // carriers
+  if(JS.showCar){
+    const dots=(F,S,P,neg,EcArr)=>{let o='',i=0;const x1=neg?px0:px1,dir=neg?-1:1;
+      for(let X=x0+dir*2;neg?X>x1:X<x1;X+=dir*4.5,i++){
+        const xd=Math.abs((X-px0)/(px1-px0)*2*Lx-Lx);let j=0;while(j<P.X.length-1&&P.X[j+1]<xd)j++;
+        const tt=P.X[j+1]!==undefined?Math.min(Math.max((xd-P.X[j])/Math.max(P.X[j+1]-P.X[j],1e-30),0),1):0;
+        const u=P.U[j]+(P.U[j+1]!==undefined?(P.U[j+1]-P.U[j])*tt:0);
+        const ec=(neg?R.EcA:R.EcB)-VT*u,ecY=y(ec),evY=y(ec-S.Eg);
+        const n=F.nAt(u)/S.nmaj,p=F.pAt(u)/S.nmaj,en=1.6*Math.min(n,2.2),ep=1.6*Math.min(p,2.2);
+        const sd=neg?500:0;
+        for(let k=0;k<3;k++){
+          if(hash(i*7+k+sd)<en-k)o+=`<circle cx="${r1(X+hash(i*13+k+sd)*2)}" cy="${r1(ecY-3-hash(i*3+k*11+sd)*10)}" r="1.9" class="ed"/>`;
+          if(hash(i*5+k+99+sd)<ep-k)o+=`<circle cx="${r1(X+hash(i*17+k+sd)*2)}" cy="${r1(evY+3+hash(i*19+k*7+sd)*10)}" r="2" class="hd"/>`;
+        }}return o};
+    s+=dots(R.FA,A,R.PA,true)+dots(R.FB,B,R.PB,false);
+  }
+  s+=both2(EcAx,EcBx,'band')+both2(EvAx,EvBx,'band');
+  // Fermi levels
+  if(R.eq){s+=L(px0,y(0),px1,y(0),'ef')+T(px1-4,y(0)+15,sb('E','F'),'halo','end')}
+  else{
+    const qa=A.isN?'Fn':'Fp',qb=B.isN?'Fn':'Fp';
+    s+=L(px0,y(EFA),x0,y(EFA),'ef')+L(x0,y(EFB),px1,y(EFB),'ef');
+    if(R.aniso){s+=L(x0,y(EFA),Math.min(xs(R.WB),px1),y(EFA),'efq')+L(Math.max(xs(-R.WA),px0),y(EFB),x0,y(EFB),'efq')}
+    s+=T(px0+6,y(EFA)+(EFA<EFB?15:-6),sb('E',qa),'halo')+T(px1-4,y(EFB)+(EFB<EFA?15:-6),sb('E',qb),'halo','end');
+    const qx=xs(-0.45*Lx);s+=arrow(qx,y(EFA),y(EFB))+T(qx+7,(y(EFA)+y(EFB))/2+4,`qV<tspan font-size="72%" dy="3.5">j</tspan><tspan dy="-3.5"> = ${Math.abs(R.V).toFixed(2)}</tspan>`,'m halo');
+  }
+  s+=T(px0+6,y(EcAx[EcAx.length-1])-6,sb('E','C'),'halo')+T(px0+6,y(EvAx[EvAx.length-1])+16,sb('E','V'),'halo');
+  s+=T(px1-4,y(EcBx[EcBx.length-1])-6,sb('E','C'),'halo','end')+T(px1-4,y(EvBx[EvBx.length-1])+16,sb('E','V'),'halo','end');
+  // offsets at interface
+  if(!R.homo){
+    if(Math.abs(R.EcA0-R.EcB0)>0.004)s+=T(x0+(R.EcB0>R.EcA0?8:-8),(y(R.EcA0)+y(R.EcB0))/2+4,`ΔE<tspan font-size="72%" dy="3.5">C</tspan>`,'m halo',R.EcB0>R.EcA0?'start':'end');
+    if(Math.abs(R.EvA0-R.EvB0)>0.004)s+=T(x0+(R.EvB0<R.EvA0?8:-8),(y(R.EvA0)+y(R.EvB0))/2+4,`ΔE<tspan font-size="72%" dy="3.5">V</tspan>`,'m halo',R.EvB0<R.EvA0?'start':'end');
+  }
+  // band bending each side
+  const bend=(side)=>{
+    const left=side==='A',Eb=left?R.EcA:R.EcB,E0=left?R.EcA0:R.EcB0,dv=E0-Eb;if(Math.abs(dv)<0.05)return '';
+    const xb=left?xs(-0.82*Lx):xs(0.82*Lx);
+    let o=L(x0,y(E0),xb+(left?-6:6),y(E0),'guide')+arrow(xb,y(Eb),y(E0));
+    o+=T(xb+(left?8:-8),(y(Eb)+y(E0))/2+4,`qV<tspan font-size="72%" dy="3.5">${left?'A':'B'}</tspan><tspan dy="-3.5"> = ${Math.abs(dv).toFixed(2)}</tspan>`,'m halo',left?'start':'end');
+    return o};
+  s+=bend('A')+bend('B');
+  const wl=(w,left,S)=>{if(!(w>0))return '';const X=xs(left?-w:w);if(X<px0||X>px1)return '';
+    const nmw=R.aniso?(S.isN?'x<tspan font-size="72%" dy="3">n</tspan><tspan dy="-3">':'x<tspan font-size="72%" dy="3">p</tspan><tspan dy="-3">'):'W<tspan font-size="72%" dy="3">'+(left?'A':'B')+'</tspan><tspan dy="-3">';
+    return L(X,top+16,X,bot,'guide')+T(X,top+11,`${nmw} = ${len(w)}</tspan>`,'m halo','middle')};
+  s+=wl(R.WA,true,A)+wl(R.WB,false,B);
+  return svg(W,H,s,'Band diagram of the semiconductor junction');
+}
+function jframe(Lx){const W=520,H=300,top=20,bot=H-44,px0=74,px1=508;return {W,H,top,bot,px0,px1,xs:x=>px0+(x+Lx)/(2*Lx)*(px1-px0)}}
+function jaxisX(F,Lx){const xu=xUnit(Lx);let s=L(F.px0,F.bot,F.px1,F.bot,'ax');
+  for(const t of ticks(-Lx*xu.f,Lx*xu.f,6)){const X=F.xs(t/xu.f);s+=L(X,F.bot,X,F.bot+4,'ax')+T(X,F.bot+17,(+t.toPrecision(4)).toString().replace('-','−'),'m mut','middle')}
+  return s+T(F.px1,F.bot+34,`x (${xu.u}) →`,'mut','end')}
+function sel2(F,P,neg){const idx=[];let last=-1e9;for(let i=0;i<P.X.length;i++){const X=F.xs(neg?-P.X[i]:P.X[i]);if(Math.abs(X-last)>=0.6||i===P.X.length-1){idx.push(i);last=X}}return idx}
+function jdrawCharge(R){
+  const F=jframe(R.L);const rA=R.PA.U.map(u=>R.FA.rho(u)),rB=R.PB.U.map(u=>R.FB.rho(u));
+  let m=0;for(const v of rA.concat(rB))m=Math.max(m,Math.abs(v));if(m===0)m=1;
+  const lim=m*1.15,mid=(F.top+F.bot)/2,y=v=>mid-v/lim*(F.bot-F.top)/2;const sc=scaleY(m);let s='';
+  for(const t of ticks(-lim/sc.f,lim/sc.f,4)){const Y=y(t*sc.f);if(Y<F.top-1||Y>F.bot+1)continue;s+=L(F.px0,Y,F.px1,Y,'gr')+T(F.px0-6,Y+4,(+t.toFixed(2)).toString().replace('-','−'),'m mut','end')}
+  s+=`<text transform="translate(16 ${r1(mid)}) rotate(-90)" text-anchor="middle" class="mut">ρ/q (10${sup(sc.e)} cm⁻³)</text>`;
+  const x0=F.xs(0);
+  s+=`<rect x="${r1(F.px0)}" y="${F.top}" width="${r1(x0-F.px0)}" height="${F.bot-F.top}" class="sideA"/>`;
+  s+=L(F.px0,mid,F.px1,mid,'ax')+L(F.px0,F.top,F.px0,F.bot,'ax')+L(x0,F.top,x0,F.bot,'guide');
+  const area=(P,r,neg)=>{const idx=sel2(F,P,neg);const pos=[],ng=[];for(const i of idx){const X=r1(F.xs(neg?-P.X[i]:P.X[i]));pos.push(`${X},${r1(y(Math.max(r[i],0)))}`);ng.push(`${X},${r1(y(Math.min(r[i],0)))}`)}
+    const xe=r1(F.xs(neg?-P.X[idx[idx.length-1]]:P.X[idx[idx.length-1]]));
+    return `<path d="M${r1(x0)},${r1(mid)}L${pos.join('L')}L${xe},${r1(mid)}Z" class="pf"/><path d="M${r1(x0)},${r1(mid)}L${ng.join('L')}L${xe},${r1(mid)}Z" class="nf"/>`};
+  s+=area(R.PA,rA,true)+area(R.PB,rB,false);
+  const glyph=(P,r,neg)=>{let o='';const dir=neg?-1:1,end=neg?F.px0+4:F.px1-4;
+    for(let X=x0+dir*9;neg?X>end:X<end;X+=dir*15){const xd=Math.abs((X-F.px0)/(F.px1-F.px0)*2*R.L-R.L);let j=0;while(j<P.X.length-1&&P.X[j+1]<xd)j++;
+      const v=r[j],h=Math.abs(y(v)-mid);if(h<13)continue;for(let yy=10;yy<h-2;yy+=14)o+=T(X,v>0?mid-yy+4:mid+yy+4,v>0?'+':'−',v>0?'pt':'nt','middle')}return o};
+  s+=glyph(R.PA,rA,true)+glyph(R.PB,rB,false);
+  if(Math.abs(R.sigma)>1e-12){const pos=R.sigma>0;const h=(F.bot-F.top)/2-4;
+    s+=`<rect x="${r1(x0-3)}" y="${r1(pos?F.top+4:mid)}" width="6" height="${r1(h)}" class="${pos?'pf':'nf'}"/>`;
+    s+=T(x0+8,pos?F.top+32:F.bot-8,`σ<tspan font-size="72%" dy="3.5">int</tspan><tspan dy="-3.5"> = ${pos?'+':'−'}${sci(Math.abs(R.sigma)/Q)} q/cm²</tspan>`,'m halo')}
+  s+=jaxisX(F,R.L);
+  const q=v=>`${v>=0?'+':'−'}${sci(Math.abs(v)/Q)}`;
+  s+=T(F.px0+6,F.top+12,`left: ${q(R.QA)} q/cm²`,'m mut halo')+T(F.px1-4,F.top+12,`right: ${q(R.QB)} q/cm²`,'m mut halo','end');
+  return svg(F.W,F.H,s,'Space charge density across the junction');
+}
+function jdrawField(R){
+  const F=jframe(R.L);const eA=R.PA.U.map(u=>VT*R.FA.fu(u)),eB=R.PB.U.map(u=>-VT*R.FB.fu(u));
+  let mx=0,mn=0;for(const v of eA.concat(eB)){mx=Math.max(mx,v);mn=Math.min(mn,v)}
+  if(mx-mn===0)mx=1;const m=Math.max(mx,-mn);
+  let unit='V/cm',uf=1;if(m>=1e6){unit='MV/cm';uf=1e6}else if(m>=1e3){unit='kV/cm';uf=1e3}
+  const pad=(mx-mn)*0.12,yT=mx+(mx>0?pad:0.02*(mx-mn)),yB=mn-(mn<0?pad:0.02*(mx-mn));
+  const y=v=>F.top+(yT-v)/(yT-yB)*(F.bot-F.top);let s='';
+  for(const t of ticks(yB/uf,yT/uf,5)){const Y=y(t*uf);s+=L(F.px0,Y,F.px1,Y,'gr')+T(F.px0-6,Y+4,(+t.toPrecision(3)).toString().replace('-','−'),'m mut','end')}
+  s+=`<text transform="translate(16 ${r1((F.top+F.bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">ℰ (${unit})</text>`;
+  const x0=F.xs(0);
+  s+=`<rect x="${r1(F.px0)}" y="${F.top}" width="${r1(x0-F.px0)}" height="${F.bot-F.top}" class="sideA"/>`;
+  s+=L(F.px0,F.top,F.px0,F.bot,'ax')+L(x0,F.top,x0,F.bot,'guide');
+  const iA=sel2(F,R.PA,true),iB=sel2(F,R.PB,false);
+  const la=iA.slice().reverse().map(i=>`${r1(F.xs(-R.PA.X[i]))},${r1(y(eA[i]))}`),lb=iB.map(i=>`${r1(F.xs(R.PB.X[i]))},${r1(y(eB[i]))}`);
+  const xa=r1(F.xs(-R.PA.X[iA[iA.length-1]])),xb=r1(F.xs(R.PB.X[iB[iB.length-1]]));
+  s+=`<path d="M${xa},${r1(y(0))}L${la.join('L')}L${r1(x0)},${r1(y(0))}Z" class="efill"/><path d="M${r1(x0)},${r1(y(0))}L${lb.join('L')}L${xb},${r1(y(0))}Z" class="efill"/>`;
+  s+=`<path d="M${la.join('L')}L${lb.join('L')}" class="eline"/>`;
+  s+=L(F.px0,y(0),F.px1,y(0),'ax');
+  s+=`<circle cx="${r1(x0)}" cy="${r1(y(R.EA0))}" r="3.5" class="efc"/><circle cx="${r1(x0)}" cy="${r1(y(R.EB0))}" r="3.5" class="efc"/>`;
+  const big=Math.abs(R.EA0)>Math.abs(R.EB0);
+  const lab=(v,side)=>`ℰ<tspan font-size="72%" dy="3.5">${side}</tspan><tspan dy="-3.5"> = ${v<0?'−':''}${sci(Math.abs(v))} V/cm</tspan>`;
+  const yl=v=>y(v)+(v>=0?-8:-10);
+  if(Math.abs(R.EA0-R.EB0)<=1e-3*Math.max(Math.abs(R.EA0),1e-30))s+=T(x0+8,yl(R.EA0),`ℰ(0) = ${R.EA0<0?'−':''}${sci(Math.abs(R.EA0))} V/cm`,'m halo');
+  else{const close=Math.abs(y(R.EA0)-y(R.EB0))<14;s+=T(x0-8,yl(R.EA0),lab(R.EA0,'A'),'m halo','end')+T(x0+8,yl(R.EB0)+(close?(R.EB0<0?-14:14):0),lab(R.EB0,'B'),'m halo')}
+  s+=jaxisX(F,R.L);
+  return svg(F.W,F.H,s,'Electric field across the junction');
+}
+function jdrawIV(R,I){
+  const W=900,H=350,top=40,bot=H-42,px0=84,px1=884,Vlo=I.Vlo,Vhi=I.Vhi;
+  const xs=v=>px0+(v-Vlo)/(Vhi-Vlo)*(px1-px0);let s='';
+  const comps=[['Jn','ivn','electron current Jₙ'],['Jp','ivp','hole current Jₚ'],['Jgr','ivgr','depletion recombination']];
+  let y,yt=[],lab;
+  if(JS.ivLog){let mx=0;for(const [,J] of I.tot)mx=Math.max(mx,Math.abs(J));
+    const hiE=Math.ceil(Math.log10(mx||1e-12)+0.3),loE=Math.max(hiE-16,-18);
+    y=J=>{const l=Math.log10(Math.max(Math.abs(J),10**(loE-1)));return bot-(l-loE)/(hiE-loE)*(bot-top)};
+    const st=(hiE-loE)>10?2:1;for(let e=loE;e<=hiE;e+=st)yt.push([10**e,`10${sup(e)}`]);lab='|J| (A/cm²)';}
+  else{let mx=0,mn=0;for(const [,J] of I.tot){mx=Math.max(mx,J);mn=Math.min(mn,J)}if(mx-mn===0)mx=1;
+    const pad=(mx-mn)*0.08,h_=mx+pad,l_=mn-pad,e=Math.floor(Math.log10(Math.max(Math.abs(h_),Math.abs(l_)))),f=10**e;
+    y=J=>bot-(J-l_)/(h_-l_)*(bot-top);for(const t of ticks(l_/f,h_/f,5))yt.push([t*f,(+t.toPrecision(3)).toString().replace('-','−')]);lab=`J (10${sup(e)} A/cm²)`;}
+  for(const [v,t] of yt){const Y=y(v);if(Y<top-1||Y>bot+1)continue;s+=L(px0,Y,px1,Y,'gr')+T(px0-7,Y+4,t,'m mut','end')}
+  for(const t of ticks(Vlo,Vhi,7)){const X=xs(t);s+=L(X,top,X,bot,'gr')+L(X,bot,X,bot+4,'ax')+T(X,bot+17,(+t.toFixed(2)).toString().replace('-','−'),'m mut','middle')}
+  s+=L(px0,top,px0,bot,'ax')+L(px0,bot,px1,bot,'ax')+L(xs(0),top,xs(0),bot,'ax');
+  if(!JS.ivLog)s+=L(px0,y(0),px1,y(0),'ax');
+  s+=`<text transform="translate(18 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">${lab}</text>`;
+  s+=T(px1,bot+34,'applied V, left side relative to right (volts) →','mut','end');
+  if(I.sgnF){const fr=I.fwd>0;s+=T(fr?xs(Vhi)-8:xs(Vlo)+8,top+14,'forward',`mut halo`,fr?'end':'start')+T(fr?xs(Vlo)+8:xs(Vhi)-8,top+14,'reverse','mut halo',fr?'start':'end')}
+  const path=pts=>{let d='',pen=false;for(const [V,J] of pts){const Y=y(J);if(!isFinite(Y)||Y<top-2||Y>bot+2){pen=false;continue}d+=(pen?'L':'M')+r1(xs(V))+','+r1(Y);pen=true}return d};
+  const shown=[];
+  for(const [k,c,nmc] of comps){const pts=I.pts.map(p=>[p.V,p[k]]);if(!pts.some(p=>Math.abs(p[1])>0))continue;
+    if(JS.ivLog||pts.some(p=>Math.abs(p[1])>1e-3*Math.max(...I.tot.map(q=>Math.abs(q[1])))))s+=P(path(pts),c),shown.push([c,nmc])}
+  s+=P(path(I.tot),'iv');
+  const Y=y(I.op.J);if(isFinite(Y)&&Y>=top&&Y<=bot&&I.opV>=Vlo&&I.opV<=Vhi)s+=`<circle cx="${r1(xs(I.opV))}" cy="${r1(Y)}" r="5" class="ivdot"/>`+T(xs(I.opV)+9,Y-8,`V<tspan font-size="72%" dy="3.5">j</tspan><tspan dy="-3.5"> = ${f2(JS.V)} V</tspan>`,'m halo');
+  let lx=px0,ly=16;const items=[['iv','total, with series resistance']].concat(shown);
+  for(const [c,nmc] of items){s+=L(lx,ly,lx+26,ly,c)+T(lx+32,ly+4,nmc,'mut');lx+=32+nmc.length*6.6+28}
+  return svg(W,H,s,'Current–voltage characteristic of the junction');
+}
+
+/* ---------- readouts & story ---------- */
+function jreadouts(R,I){
+  const A=R.A,B=R.B,la=lbl(A,B,R.homo),lb=lbl(B,A,R.homo);
+  let cls,txt;
+  if(R.al.key==='III'){cls='tunnel';txt=`${la}–${lb} broken-gap heterojunction`}
+  else if(R.aniso){cls='schottky';txt=`${la}–${lb} ${R.homo?'homojunction':'heterojunction'} · rectifying`}
+  else if(R.homo){cls=Math.abs(R.Vbi0)<0.01?'flat':'ohmic';txt=Math.abs(R.Vbi0)<0.01?'Uniform material · no junction':`${A.type}⁺–${A.type} high–low junction`;
+    if(Math.abs(R.Vbi0)>=0.01&&A.N<B.N)txt=`${A.type}–${A.type}⁺ high–low junction`}
+  else{cls='ohmic';txt=`${la}–${lb} isotype heterojunction`}
+  $('jpill').className='pill '+cls;$('jpill').textContent=txt;
+  $('jsub').textContent=R.al.name+(R.homo?'':` · ${R.al.short}`);
+  const w=[];
+  if(A.deg||B.deg)w.push('A side is near or past degeneracy: Boltzmann statistics overstate the Fermi-level shift');
+  if(R.degAcc)w.push('Accumulation layer is degenerate at the interface: Boltzmann statistics overstate its charge');
+  if(R.invA||R.invB)w.push('Surface inversion at the interface');
+  if(R.aniso&&A.deg&&B.deg)w.push('Both sides degenerate: band-to-band (Esaki) tunneling would dominate and is not modeled');
+  if(R.al.key==='III')w.push('Real broken-gap junctions conduct mainly by interband tunneling, which Fig. 5 does not include');
+  if(!R.I.ok)w.push('Interface solution hit the solver limit; reduce σ_int');
+  $('jwarns').innerHTML=w.map(x=>`<span class="warn">${x}</span>`).join(' ');
+  const dEc=Math.abs(A.chi-B.chi),dEv=Math.abs((A.chi+A.Eg)-(B.chi+B.Eg));
+  const items=[
+    ['ΔE_C · ΔE_V',R.homo?'0 · 0':`${dEc.toFixed(3)} · ${dEv.toFixed(3)} eV`],
+    ['Built-in qV_bi = φ_A − φ_B',`${f3(R.Vbi0)} eV`],
+    ['Band bending left · right',`${Math.abs(R.EcA0-R.EcA).toFixed(3)} · ${Math.abs(R.EcB-R.EcB0).toFixed(3)} eV`],
+    [R.aniso?(A.isN?'x_n (left)':'x_p (left)'):'Left: W or L_D',R.WA>0?len(R.WA):'accum. · '+len(A.LD)],
+    [R.aniso?(B.isN?'x_n (right)':'x_p (right)'):'Right: W or L_D',R.WB>0?len(R.WB):'accum. · '+len(B.LD)],
+    ['Interface field ℰ_A · ℰ_B',`${sci(R.EA0)} · ${sci(R.EB0)} V/cm`]
+  ];
+  if(R.cSpike>0.01)items.push(['Conduction-band spike',`${R.cSpike.toFixed(3)} eV`]);
+  if(R.vSpike>0.01)items.push(['Valence-band spike',`${R.vSpike.toFixed(3)} eV`]);
+  const ns=R.nsA+R.nsB,ps=R.psA+R.psB;
+  if(ns>1e9)items.push(['Accumulated electrons n_s',`${sci(ns)} cm⁻²`]);
+  if(ps>1e9)items.push(['Accumulated holes p_s',`${sci(ps)} cm⁻²`]);
+  items.push(['Left bulk: E_F − E_V · ionized',`${A.EF.toFixed(3)} eV · ${(A.fion*100).toFixed(A.fion>0.995?2:1)} %`]);
+  items.push(['Right bulk: E_F − E_V · ionized',`${B.EF.toFixed(3)} eV · ${(B.fion*100).toFixed(B.fion>0.995?2:1)} %`]);
+  $('jkv').innerHTML=items.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  const iv=[['Series resistance Rs',`${sci(I.Rs)} Ω·cm²`]];
+  if(I.sgnF){iv.push(['|J| at 1 V reverse',`${sci(Math.abs(I.Jrev))} A/cm²`]);iv.push(['Ideality n (0.1–0.2 V)',I.nid?I.nid.toFixed(2):'—']);
+    iv.push(['Turn-on at 1 A/cm²',I.Von===null?'beyond range':`${f2(I.Von)} V`]);
+    if(I.inj!==null)iv.push(['Injection ratio Jₙ : Jₚ at turn-on',I.inj>=1?`${sci(I.inj)} : 1`:`1 : ${sci(1/I.inj)}`])}
+  else{iv.push(['|J| at 1 V either way',`${sci(Math.abs(I.Jrev))} A/cm²`]);iv.push(['Behavior',Math.abs(R.Vbi0)>0.1&&(R.cSpike>0.05||R.vSpike>0.05)?'rectifying (thermionic over spike)':'nearly ohmic'])}
+  $('jivkv').innerHTML=iv.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+}
+function jstory(R){
+  const A=R.A,B=R.B,hi=A.phi<B.phi?'left':'right',lo=hi==='left'?'right':'left',d=Math.abs(R.Vbi0).toFixed(2);
+  const vA=Math.abs(R.EcA0-R.EcA),vB=Math.abs(R.EcB-R.EcB0);
+  let t='';
+  if(Math.abs(R.Vbi0)<0.01&&Math.abs(R.sigma)<1e-12&&R.homo){t='Both sides have the same material and the same Fermi level, so nothing flows on contact and the bands stay flat.'}
+  else if(R.al.key==='III'){
+    t=`This is a broken-gap alignment: the ${A.chi>B.chi?'left':'right'} conduction band lies below the ${A.chi>B.chi?'right':'left'} valence band. On contact, electrons move from valence states on one side straight into conduction states on the other, without crossing any gap. That leaves an electron accumulation layer and a hole accumulation layer facing each other across the interface, a semimetallic interface that tunnel FETs and type-III superlattices exploit. The ${d} eV work-function difference is taken up by ${vA.toFixed(2)} eV of bending on the left and ${vB.toFixed(2)} eV on the right.`;
+  }else if(R.aniso){
+    const p=A.isN?'right':'left',n=A.isN?'left':'right';
+    t=`Before contact the ${n} (n) side has the higher Fermi level by ${d} eV. On contact, electrons diffuse from the n side to the p side and holes diffuse the other way, leaving ionized donors (+) and acceptors (−) behind. The resulting field builds up until it stops further diffusion and E_F is flat. The bands bend by ${vA.toFixed(2)} eV on the left and ${vB.toFixed(2)} eV on the right, and the depletion region is ${len(R.WA)} wide on the left and ${len(R.WB)} on the right. `;
+    const r=R.WA>0&&R.WB>0?Math.max(R.WA,R.WB)/Math.min(R.WA,R.WB):1;
+    if(r>5)t+=`Doping is very unequal, so this is a one-sided junction: almost all of the depletion width and band bending sit in the lightly doped side, because N·x must balance on both sides. `;
+    if(!R.homo){t+=`Because the gaps differ, the band edges are discontinuous at the interface (ΔE_C = ${Math.abs(A.chi-B.chi).toFixed(2)} eV, ΔE_V = ${Math.abs((A.chi+A.Eg)-(B.chi+B.Eg)).toFixed(2)} eV). `;
+      if(R.cSpike>0.02)t+=`A ${R.cSpike.toFixed(2)} eV spike in the conduction band sits above both bulk levels and adds a thermionic barrier for electrons. `;
+      if(R.vSpike>0.02)t+=`A ${R.vSpike.toFixed(2)} eV spike in the valence band blocks holes the same way. `;
+      const wide=A.Eg>B.Eg?'left':'right';
+      t+=`The band offsets also make injection lopsided: the wide-gap ${wide} side injects its majority carriers far more readily than it receives the other carrier, which is why heterojunction bipolar transistors use a wide-gap emitter.`;}
+    else t+=`The current follows the Shockley diode equation. At low forward bias recombination in the depletion region dominates (n ≈ 2); at higher bias minority-carrier diffusion takes over (n ≈ 1).`;
+    if(Math.abs(R.V)>1e-9){const f=(R.V>0)===!A.isN;t+=` ${f?'Forward':'Reverse'} bias of ${Math.abs(R.V).toFixed(2)} V separates the quasi-Fermi levels and ${f?'lowers':'raises'} the total band bending to ${Math.abs(R.Vbi0-R.V).toFixed(2)} eV, ${f?'narrowing':'widening'} both depletion regions.`}
+  }else{
+    const c=A.isN?'electrons':'holes';
+    if(R.homo)t=`Both sides are ${A.type}-type ${nm(A.mat)} with different doping. ${c[0].toUpperCase()+c.slice(1)} diffuse from the heavily doped side into the lightly doped side. That builds up an accumulation layer about a Debye length thick on the light side and depletes the heavy side slightly. The step is only ${d} eV, about kT·ln(N₁/N₂). Majority carriers cross it freely, so the junction is ohmic, but it repels minority carriers. That is the back-surface field used in solar cells.`;
+    else{t=`Both sides are ${A.type}-type, so this is an isotype heterojunction. Majority ${c} move from the ${hi} side (higher Fermi level for electrons, lower for holes) to the ${lo} side until E_F lines up. One side depletes (${vA.toFixed(2)} eV of bending on the left, ${vB.toFixed(2)} eV on the right) and the other gathers an accumulation layer against the interface. `;
+      const ns=R.nsA+R.nsB,ps=R.psA+R.psB;
+      if(A.isN&&ns>1e10)t+=`About ${sci(ns)} electrons/cm² collect in the notch on the narrow-gap side, the same mechanism that forms the two-dimensional electron gas in a modulation-doped HEMT. `;
+      if(!A.isN&&ps>1e10)t+=`About ${sci(ps)} holes/cm² collect at the interface. `;
+      if(R.cSpike>0.02||R.vSpike>0.02)t+=`The ${(R.cSpike>R.vSpike?R.cSpike:R.vSpike).toFixed(2)} eV spike makes the junction mildly rectifying: majority carriers must cross it by thermionic emission.`;}
+  }
+  if(Math.abs(R.sigma)>1e-12)t+=` The interface sheet charge of ${R.sigma>0?'+':'−'}${sci(Math.abs(R.sigma)/Q)} q/cm² is screened by the semiconductors on either side, and ε·ℰ jumps by that amount at x = 0.${R.sigma>0?' Positive polarization charge, as at an AlGaN/GaN interface, pulls electrons toward the interface and forms a 2DEG even without doping.':''}`;
+  $('jstory').textContent=t;
+}
+
+/* ---------- UI ---------- */
+function fillDop(k){const sd=JS[k],ds=JM[sd.mat][sd.type];if(!(sd.dop in ds))sd.dop=Object.keys(ds)[0];
+  $(`j${k}dop`).innerHTML=Object.entries(ds).map(([d,v])=>`<option value="${d}" ${d===sd.dop?'selected':''}>${d} · ${(v*1000).toFixed(v<0.01?1:0)} meV</option>`).join('')}
+function setMat(k,mat){const sd=JS[k];sd.mat=mat;sd.Eg=JM[mat].Eg;sd.chi=JM[mat].chi;fillDop(k);$(`j${k}mat`).value=mat}
+function logNforEFj(k,target){const sd=JS[k],m=JM[sd.mat],dE=m[sd.type][sd.dop];let lo=13,hi=20.3;const up=sd.type==='n';
+  for(let i=0;i<60;i++){const mid=(lo+hi)/2;const e=solveEF(m,sd.type,10**mid,dE,sd.Eg);if((e<target)===up)lo=mid;else hi=mid}return (lo+hi)/2}
+function jupdate(){
+  const R=jcompute();
+  for(const k of ['A','B']){const sd=JS[k],S=R[k],m=JM[sd.mat];
+    $(`j${k}tn`).setAttribute('aria-pressed',sd.type==='n');$(`j${k}tp`).setAttribute('aria-pressed',sd.type==='p');
+    $(`j${k}NL`).innerHTML=sd.type==='n'?'Concentration N<sub>D</sub>':'Concentration N<sub>A</sub>';
+    $(`j${k}N`).value=sd.logN;$(`j${k}NO`).textContent=sci(S.N)+' cm⁻³';
+    $(`j${k}EF`).max=sd.Eg.toFixed(3);$(`j${k}EF`).value=S.EF;$(`j${k}EFO`).textContent=S.EF.toFixed(3)+' eV';
+    $(`j${k}Eg`).value=sd.Eg;$(`j${k}EgO`).textContent=sd.Eg.toFixed(2)+' eV';$(`j${k}EgT`).textContent=Math.abs(sd.Eg-m.Eg)>0.004?'modified':'';
+    $(`j${k}chi`).value=sd.chi;$(`j${k}chiO`).textContent=sd.chi.toFixed(2)+' eV';$(`j${k}chiT`).textContent=Math.abs(sd.chi-m.chi)>0.004?'modified':'';}
+  $('jSig').value=JS.sig;$('jSigO').textContent=(JS.sig===0?'0':(JS.sig>0?'+':'−')+Math.abs(JS.sig).toFixed(1)+'×10¹²')+' q/cm²';
+  const v=$('jV');v.min=R.vlo;v.max=R.vhi;v.value=JS.V;$('jVO').textContent=(JS.V>=0?'+':'−')+Math.abs(JS.V).toFixed(2)+' V';
+  $('jVhint').textContent=R.aniso?`Forward bias makes the p side (${R.A.isN?'right':'left'}) positive, so forward is ${R.A.isN?'negative':'positive'} V here. Bias is across the junction itself; Fig. 5 adds the series-resistance drop.`:'Positive V raises the left side’s potential. Bias is across the junction itself; Fig. 5 adds the series-resistance drop.';
+  for(const z of [1,10,100])$('jZ'+z).setAttribute('aria-pressed',JS.zoom===z);
+  $('jf2cap').innerHTML=`Fig. 2 · Junction<small>${R.eq?'thermal equilibrium, E<sub>F</sub> flat':(Math.abs(JS.V).toFixed(2)+' V junction bias, quasi-Fermi levels split')}</small>`;
+  $('jf3sub').textContent=Math.abs(R.sigma)>1e-12?'interface sheet charge drawn schematically':'';
+  $('jf1').innerHTML=jdrawBefore(R);$('jf2').innerHTML=jdrawAfter(R);$('jf3').innerHTML=jdrawCharge(R);$('jf4').innerHTML=jdrawField(R);
+  const key=JSON.stringify([JS.A,JS.B,JS.sig]);if(key!==ivKey){ivKey=key;ivCache=jIV(R)}
+  const I=ivCache;I.op=I.at(JS.V);I.opV=JS.V+I.op.J*I.Rs;$('jf5').innerHTML=jdrawIV(R,I);
+  $('jivLog').setAttribute('aria-pressed',JS.ivLog);$('jivLin').setAttribute('aria-pressed',!JS.ivLog);
+  jreadouts(R,I);jstory(R);
+}
+function jinit(){
+  $('jsideA').innerHTML=sideHTML('A','Left semiconductor · A');$('jsideB').innerHTML=sideHTML('B','Right semiconductor · B');
+  const opts=Object.entries(JM).map(([k,v])=>`<option value="${k}">${nm(k)} · Eg ${v.Eg.toFixed(2)}, χ ${v.chi.toFixed(2)} eV</option>`).join('');
+  for(const k of ['A','B']){
+    $(`j${k}mat`).innerHTML=opts;$(`j${k}mat`).value=JS[k].mat;fillDop(k);
+    $(`j${k}mat`).onchange=e=>{setMat(k,e.target.value);JS.V=0;jupdate()};
+    $(`j${k}tn`).onclick=()=>{JS[k].type='n';fillDop(k);JS.V=0;jupdate()};
+    $(`j${k}tp`).onclick=()=>{JS[k].type='p';fillDop(k);JS.V=0;jupdate()};
+    $(`j${k}dop`).onchange=e=>{JS[k].dop=e.target.value;jupdate()};
+    $(`j${k}N`).oninput=e=>{JS[k].logN=+e.target.value;jupdate()};
+    $(`j${k}EF`).oninput=e=>{JS[k].logN=logNforEFj(k,+e.target.value);jupdate()};
+    $(`j${k}Eg`).oninput=e=>{JS[k].Eg=+e.target.value;jupdate()};
+    $(`j${k}chi`).oninput=e=>{JS[k].chi=+e.target.value;jupdate()};
+  }
+  $('jSig').oninput=e=>{JS.sig=+e.target.value;jupdate()};
+  $('jV').oninput=e=>{JS.V=+e.target.value;jupdate()};
+  $('jVac').onchange=e=>{JS.showVac=e.target.checked;jupdate()};
+  $('jCar').onchange=e=>{JS.showCar=e.target.checked;jupdate()};
+  $('jEi').onchange=e=>{JS.showEi=e.target.checked;jupdate()};
+  for(const z of [1,10,100])$('jZ'+z).onclick=()=>{JS.zoom=z;jupdate()};
+  $('jivLog').onclick=()=>{JS.ivLog=true;jupdate()};$('jivLin').onclick=()=>{JS.ivLog=false;jupdate()};
+  const pr=$('jpresets');
+  for(const [lab,p] of JPRE){const b=document.createElement('button');b.className='chip';b.textContent=lab;
+    b.onclick=()=>{for(const k of ['A','B']){const [mat,type,dop,logN]=p[k];JS[k].type=type;setMat(k,mat);JS[k].dop=dop;fillDop(k);JS[k].logN=logN}
+      JS.sig=p.sig||0;JS.V=0;JS.zoom=p.zoom||1;jupdate()};pr.appendChild(b)}
+  jupdate();
+}
+jinit();
+window.__hj={JM,NAMES,jside,jfun,integ};
+
+/* ---------- tabs ---------- */
+const tabs=[['ms','tabbtn-ms','tab-ms'],['hj','tabbtn-hj','tab-hj'],['mos','tabbtn-mos','tab-mos']];
+function show(key){for(const [k,b,p] of tabs){const on=k===key;$(b).setAttribute('aria-selected',on);$(b).tabIndex=on?0:-1;$(p).hidden=!on}
+  try{localStorage.setItem('bench-tab',key)}catch(e){}}
+for(const [k,b] of tabs){$(b).onclick=()=>{show(k);try{history.replaceState(null,'','#'+k)}catch(e){}};
+  $(b).onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const i=tabs.findIndex(t=>t[0]===k),n=tabs[(i+(e.key==='ArrowRight'?1:tabs.length-1))%tabs.length];show(n[0]);$(n[1]).focus()}}}
+let start='ms';try{start=localStorage.getItem('bench-tab')||'ms'}catch(e){}
+const h=(location.hash||'').slice(1);if(['ms','hj','mos'].includes(h))start=h;if(!['ms','hj','mos'].includes(start))start='ms';
+show(start);
+})();
+
+</script>
+<script>
+/* ===================== MOS capacitor ===================== */
+(function(){
+const {JM,NAMES,jside,jfun,integ}=window.__hj;const nm=k=>NAMES[k]||k;
+const $=id=>document.getElementById(id);
+const CQ=Math.sqrt(2*Q*VT);
+const GATES={'n⁺ poly-Si':4.05,'p⁺ poly-Si':5.17,Al:4.28,Ti:4.33,W:4.55,TiN:4.6,Mo:4.6,Au:5.1,Ni:5.15,Pt:5.65};
+const OX={SiO2:{name:'SiO₂',k:3.9,chi:0.95,Eg:9.0,Ebd:10},Si3N4:{name:'Si₃N₄',k:7.5,chi:2.1,Eg:5.3,Ebd:8},
+  Al2O3:{name:'Al₂O₃',k:9,chi:1.35,Eg:8.8,Ebd:8},HfO2:{name:'HfO₂',k:22,chi:2.5,Eg:5.8,Ebd:4},ZrO2:{name:'ZrO₂',k:25,chi:2.5,Eg:5.8,Ebd:4}};
+const MS={gate:'n⁺ poly-Si',phim:4.05,ox:'SiO2',ltox:Math.log10(5),qf:0,S:{mat:'Si',type:'p',dop:'B',logN:17,Eg:1.12,chi:4.05},
+  VG:0,mode:'eq',showVac:false,showCar:true,showEi:true,zoom:1};
+const MPRE=[
+ ['n⁺poly / SiO₂ / p-Si · NMOS',{gate:'n⁺ poly-Si',ox:'SiO2',tox:5,S:['Si','p','B',17],qf:0,VG:1}],
+ ['p⁺poly / SiO₂ / n-Si · PMOS',{gate:'p⁺ poly-Si',ox:'SiO2',tox:5,S:['Si','n','P',17],qf:0,VG:-1}],
+ ['Al / 100 nm SiO₂ / p-Si · classic C–V',{gate:'Al',ox:'SiO2',tox:100,S:['Si','p','B',15],qf:0,VG:0}],
+ ['… with +5×10¹¹ fixed charge',{gate:'Al',ox:'SiO2',tox:100,S:['Si','p','B',15],qf:50,VG:0}],
+ ['TiN / 3 nm HfO₂ / p-Si · high-k',{gate:'TiN',ox:'HfO2',tox:3,S:['Si','p','B',17.5],qf:0,VG:0.8}],
+ ['Ni / Al₂O₃ / n-GaN',{gate:'Ni',ox:'Al2O3',tox:20,S:['GaN','n','Si',17],qf:0,VG:0}],
+ ['Mo / SiO₂ / n-4H-SiC',{gate:'Mo',ox:'SiO2',tox:50,S:['4H-SiC','n','N',16],qf:0,VG:0}]
+];
+let cvKey=null,cvCache=null;
+
+function semiHTML(){return `<fieldset>
+  <legend>Semiconductor</legend>
+  <div class="ctl"><select id="mSmat" aria-label="Semiconductor"></select></div>
+  <div class="seg" role="group" aria-label="Doping type"><button id="mStn" aria-pressed="false">n-type</button><button id="mStp" aria-pressed="false">p-type</button></div>
+  <div class="ctl"><label for="mSdop">Dopant · ionization energy</label><select id="mSdop"></select></div>
+  <div class="ctl"><div class="row"><label for="mSN" id="mSNL">Concentration</label><output id="mSNO"></output></div>
+    <input type="range" id="mSN" min="13" max="19" step="0.05"></div>
+  <div class="ctl"><div class="row"><label for="mSEF">Fermi level E<sub>F</sub> − E<sub>V</sub></label><output id="mSEFO"></output></div>
+    <input type="range" id="mSEF" min="0" max="1.12" step="0.002"></div>
+  <div class="ctl"><div class="row"><label for="mSEg">Band gap E<sub>g</sub> <span class="tag" id="mSEgT"></span></label><output id="mSEgO"></output></div>
+    <input type="range" id="mSEg" min="0.2" max="4.5" step="0.01"></div>
+  <div class="ctl"><div class="row"><label for="mSchi">Electron affinity qχ <span class="tag" id="mSchiT"></span></label><output id="mSchiO"></output></div>
+    <input type="range" id="mSchi" min="3.0" max="5.2" step="0.01"></div>
+</fieldset>`}
+
+/* ---------- physics ---------- */
+function base(){
+  const s=jside(MS.S),ox=OX[MS.ox],epsox=ox.k*EPS0,tox=10**MS.ltox*1e-7,Cox=epsox/tox,Qf=MS.qf*1e10*Q;
+  const Fe=jfun(s,true),Fd=jfun(s,false);
+  const Qs=(F,u)=>-CQ*F.G(u);
+  const phims=MS.phim-s.phi,VFB=phims-Qf/Cox,sg=s.isN?-1:1,phiB=Math.abs(s.EF-s.Ei);
+  const vg=(F,u)=>phims+VT*u-(Qs(F,u)+Qf)/Cox;
+  const solve=(F,V)=>{let lo=-300,hi=300;while(vg(F,hi)<V&&hi<8000)hi*=2;while(vg(F,lo)>V&&lo>-8000)lo*=2;
+    for(let i=0;i<60;i++){const m=(lo+hi)/2;if(vg(F,m)<V)lo=m;else hi=m}return (lo+hi)/2};
+  const dQ=(F,u)=>{const d=1e-3;return Math.abs(Qs(F,u+d)-Qs(F,u-d))/(2*d*VT)};
+  const uT=sg*2*phiB/VT,VTh=vg(Fe,uT);
+  const span=Math.max(1,0.6*Math.abs(VTh-VFB));
+  const Vlo=Math.floor((Math.min(VFB,VTh)-span)*10)/10,Vhi=Math.ceil((Math.max(VFB,VTh)+span)*10)/10;
+  const Wmax=Math.sqrt(2*s.eps*2*phiB/(Q*s.N));
+  return {s,ox,epsox,tox,Cox,Qf,Fe,Fd,Qs,phims,VFB,sg,phiB,vg,solve,dQ,uT,VTh,Vlo,Vhi,Wmax};
+}
+function mcompute(){
+  const B=base(),s=B.s;
+  MS.VG=Math.min(Math.max(MS.VG,B.Vlo),B.Vhi);
+  const F=MS.mode==='eq'?B.Fe:B.Fd;
+  const us=B.solve(F,MS.VG),psi=VT*us;
+  const Qsv=B.Qs(F,us),QG=-(Qsv+B.Qf),Eox=QG/B.epsox,Es=-Qsv/s.eps,Vox=Eox*B.tox;
+  const dep=B.sg*us>0;
+  const W=dep?Math.sqrt(2*s.eps*Math.max(Math.abs(psi)-VT,VT)/(Q*s.N)):0;
+  const Lauto=Math.max(dep?1.6*Math.min(W,MS.mode==='eq'?B.Wmax*1.05:W):0,8*s.LD,dep?0:1.6*B.Wmax*0.25);
+  const L=Lauto/MS.zoom;
+  const Pfull=integ(F.fu,us,Lauto),P=MS.zoom===1?Pfull:integ(F.fu,us,L);
+  // inversion / accumulation sheet densities
+  const minor=u=>s.isN?F.pAt(u):F.nAt(u),major=u=>s.isN?F.nAt(u):F.pAt(u);
+  let inv=0,acc=0;for(let i=1;i<Pfull.X.length;i++){const dx=Pfull.X[i]-Pfull.X[i-1];
+    inv+=((minor(Pfull.U[i])+minor(Pfull.U[i-1]))/2-minor(0))*dx;acc+=Math.max(((major(Pfull.U[i])+major(Pfull.U[i-1]))/2-major(0)),0)*dx}
+  const psiP=B.sg*psi;
+  let reg;
+  if(Math.abs(psi)<VT/2)reg='flat';else if(psiP<0)reg='acc';else if(psiP<B.phiB)reg='dep';else if(psiP<2*B.phiB)reg='weak';else reg=MS.mode==='eq'?'strong':'deep';
+  const Ecb=s.Eg-s.EF,EFm=-MS.VG;
+  return {...B,F,us,psi,Qsv,QG,Eox,Es,Vox,W,L,Lauto,P,inv,acc,reg,Ecb,EFm,dep};
+}
+function mCV(R){
+  const pts=[];const n=200;
+  for(let i=0;i<=n;i++){const V=R.Vlo+(R.Vhi-R.Vlo)*i/n;
+    const uL=R.solve(R.Fe,V),uD=R.solve(R.Fd,V);
+    const c=Cs=>1/(1+R.Cox/Math.max(Cs,1e-30));
+    pts.push({V,lf:c(R.dQ(R.Fe,uL)),hf:c(R.dQ(R.Fd,uL)),dd:c(R.dQ(R.Fd,uD))})}
+  let cmin=1;for(const p of pts)cmin=Math.min(cmin,p.hf);
+  return {pts,cmin};
+}
+
+/* ---------- drawing ---------- */
+const sideLbl=s=>`${s.type}-${nm(s.mat)}`;
+function mdrawBefore(R){
+  const s=R.s,ox=R.ox,W=460,H=440,top=24,bot=H-34;
+  const EFm=-MS.phim,Ecox=-ox.chi,Evox=Ecox-ox.Eg,Ec=-s.chi,Ev=Ec-s.Eg,Ef=-s.phi;
+  const Emin=Math.min(Ev,EFm)-0.6,Emax=0.35;
+  const y=E=>top+(Emax-E)/(Emax-Emin)*(bot-top);
+  const mx0=14,mx1=120,ox0=170,ox1=262,sx0=300,sx1=446;
+  let s_=`<defs><clipPath id="mclip1"><rect x="0" y="${top-4}" width="${W}" height="${bot-top+8}"/></clipPath><pattern id="hatchM1" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" class="medge" stroke-width="1"/></pattern></defs>`;
+  s_+=L(mx0,y(0),sx1,y(0),'vac')+T(sx1,y(0)-6,sb('E','vac'),'mut','end');
+  s_+=`<rect x="${mx0}" y="${r1(y(EFm))}" width="${mx1-mx0}" height="${r1(bot-y(EFm))}" class="mfill"/><rect x="${mx0}" y="${r1(y(EFm))}" width="${mx1-mx0}" height="${r1(bot-y(EFm))}" fill="url(#hatchM1)" opacity=".5"/>`;
+  s_+=L(mx0,y(EFm),mx1,y(EFm),'ef')+T(mx1,y(EFm)-6,sb('E','F,m'),'halo','end');
+  s_+=arrow(mx0+18,y(0),y(EFm))+T(mx0+25,(y(0)+y(EFm))/2+4,`qφ<tspan font-size="72%" dy="3.5">m</tspan><tspan dy="-3.5"> = ${MS.phim.toFixed(2)}</tspan>`,'m halo');
+  s_+=T((mx0+mx1)/2,bot+20,MS.gate,'mut','middle');
+  // oxide
+  s_+=`<g clip-path="url(#mclip1)"><rect x="${ox0}" y="${r1(y(Ecox))}" width="${ox1-ox0}" height="${r1(y(Evox)-y(Ecox))}" class="oxfill"/>`+L(ox0,y(Ecox),ox1,y(Ecox),'band')+L(ox0,y(Evox),ox1,y(Evox),'band')+'</g>';
+  s_+=T(ox1-4,y(Ecox)-6,sb('E','C,ox'),'halo','end');
+  if(y(Evox)>bot)s_+=T((ox0+ox1)/2,bot-6,`E<tspan font-size="72%" dy="3">V,ox</tspan><tspan dy="-3"> ↓ ${f2(Evox)} eV</tspan>`,'m mut halo','middle');
+  else s_+=T(ox1-4,y(Evox)+16,sb('E','V,ox'),'halo','end');
+  s_+=arrow(ox0+14,y(0),y(Ecox))+T(ox0+20,(y(0)+y(Ecox))/2+4,`qχ<tspan font-size="72%" dy="3.5">ox</tspan><tspan dy="-3.5"> = ${ox.chi.toFixed(2)}</tspan>`,'m halo');
+  s_+=T((ox0+ox1)/2,bot+20,ox.name,'mut','middle');
+  // semiconductor
+  s_+=L(sx0,y(Ec),sx1,y(Ec),'band')+L(sx0,y(Ev),sx1,y(Ev),'band')+L(sx0,y(Ef),sx1,y(Ef),'ef');
+  if(MS.showEi)s_+=L(sx0,y(Ev+s.Ei),sx1,y(Ev+s.Ei),'ei');
+  s_+=T(sx1,y(Ec)-6,sb('E','C'),'halo','end')+T(sx1,y(Ev)+16,sb('E','V'),'halo','end');
+  const efOff=s.isN?((Ec-Ef)<0.2?14:-5):((Ef-Ev)<0.2?-5:14);
+  s_+=T(sx0+2,y(Ef)+efOff,sb('E','F'),'halo');
+  s_+=arrow(sx1-30,y(0),y(Ec))+T(sx1-37,(y(0)+y(Ec))/2+4,`qχ = ${s.chi.toFixed(2)}`,'m halo','end');
+  s_+=arrow(sx1-120,y(0),y(Ef))+T(sx1-113,(y(0)+y(Ef))/2+16,`qφ<tspan font-size="72%" dy="3.5">s</tspan><tspan dy="-3.5"> = ${s.phi.toFixed(2)}</tspan>`,'m halo');
+  s_+=arrow(sx1-60,y(Ec),y(Ev))+T(sx1-53,(y(Ec)+y(Ev))/2+4,`E<tspan font-size="72%" dy="3.5">g</tspan><tspan dy="-3.5"> = ${s.Eg.toFixed(2)}</tspan>`,'m halo');
+  s_+=T((sx0+sx1)/2,bot+20,`${sideLbl(s)} : ${s.dop}`,'mut','middle');
+  // Φms
+  const gx=145;s_+=L(mx1,y(EFm),gx+6,y(EFm),'guide')+L(gx-6,y(Ef),sx0,y(Ef),'guide');
+  s_+=arrow(gx,y(EFm),y(Ef))+T(gx,Math.max(y(EFm),y(Ef))+16,`Φ<tspan font-size="72%" dy="3.5">ms</tspan><tspan dy="-3.5"> = ${sgn(R.phims)}</tspan>`,'m halo','middle');
+  // ΔEc barrier semi/oxide
+  s_+=L(ox1,y(Ec),sx0,y(Ec),'guide');
+  s_+=arrow(ox1+18,y(Ecox),y(Ec))+T(ox1+14,(y(Ecox)+y(Ec))/2+4,`${(s.chi-ox.chi).toFixed(2)}`,'m halo','end');
+  return svg(W,H,s_,'Band diagrams of gate, insulator and semiconductor before contact');
+}
+function selIdx(P,xs){const idx=[];let last=-1e9;for(let i=0;i<P.X.length;i++){const X=xs(P.X[i]);if(Math.abs(X-last)>=0.6||i===P.X.length-1){idx.push(i);last=X}}return idx}
+function mdrawAfter(R){
+  const s=R.s,ox=R.ox,W=640,H=440,top=22,bot=H-50,px0=62,px1=628,gx=128,ox1=228,Lx=R.L;
+  const xs=x=>ox1+x/Lx*(px1-ox1);
+  const Ecx=R.P.U.map(u=>R.Ecb-VT*u),Evx=Ecx.map(e=>e-s.Eg);
+  const vac0=Ecx[0]+s.chi,vacG=R.EFm+MS.phim;
+  const EcoxS=vac0-ox.chi,EcoxG=vacG-ox.chi,EvoxS=EcoxS-ox.Eg,EvoxG=EcoxG-ox.Eg;
+  let lo=Math.min(...Evx,R.EFm,0)-0.45,hi=Math.max(...Ecx,EcoxS,EcoxG,R.EFm)+0.3;
+  if(MS.showVac)hi=Math.max(hi,vac0,vacG,Ecx[Ecx.length-1]+s.chi)+0.1;
+  const y=E=>top+(hi-E)/(hi-lo)*(bot-top);
+  let o=`<defs><clipPath id="mclip2"><rect x="${px0}" y="${top}" width="${px1-px0}" height="${bot-top}"/></clipPath><pattern id="hatchM2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" class="medge" stroke-width="1"/></pattern></defs>`;
+  // axes
+  const xu=xUnit(Lx);o+=L(ox1,bot,px1,bot,'ax');
+  for(const t of ticks(0,Lx*xu.f,5)){const X=xs(t/xu.f);o+=L(X,bot,X,bot+4,'ax')+T(X,bot+17,(+t.toPrecision(4)),'m mut','middle')}
+  o+=T(px1,bot+36,`depth into semiconductor (${xu.u}) →`,'mut','end');
+  o+=L(px0,top,px0,bot,'ax');
+  for(const t of ticks(lo,hi,6)){const Y=y(t);o+=L(px0-4,Y,px0,Y,'ax')+T(px0-7,Y+4,(+t.toFixed(2)).toString().replace('-','−'),'m mut','end')}
+  o+=`<text transform="translate(16 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">E − E<tspan font-size="72%" dy="3">F,s</tspan><tspan dy="-3"> (eV)</tspan></text>`;
+  // gate
+  o+=`<rect x="${px0+1}" y="${r1(y(R.EFm))}" width="${gx-px0-1}" height="${r1(bot-y(R.EFm))}" class="mfill"/><rect x="${px0+1}" y="${r1(y(R.EFm))}" width="${gx-px0-1}" height="${r1(bot-y(R.EFm))}" fill="url(#hatchM2)" opacity=".5"/>`;
+  o+=L(px0,y(R.EFm),gx,y(R.EFm),'ef')+T(px0+5,y(R.EFm)-6,sb('E','F,m'),'halo');
+  o+=T((px0+gx)/2,bot-8,MS.gate.replace(' poly-Si',' poly'),'mut halo','middle');
+  // oxide
+  o+=`<g clip-path="url(#mclip2)"><polygon points="${gx},${r1(y(EcoxG))} ${ox1},${r1(y(EcoxS))} ${ox1},${r1(y(EvoxS))} ${gx},${r1(y(EvoxG))}" class="oxfill"/>`;
+  o+=L(gx,y(EcoxG),ox1,y(EcoxS),'band')+L(gx,y(EvoxG),ox1,y(EvoxS),'band')+'</g>';
+  o+=L(gx,top,gx,bot,'medge')+L(ox1,top,ox1,bot,'guide');
+  o+=T((gx+ox1)/2,Math.min(y(EcoxG),y(EcoxS))-8,sb('E','C,ox'),'halo','middle');
+  o+=T((gx+ox1)/2,bot-8,`${ox.name} · ${len(R.tox)}`,'mut halo','middle');
+  if(MS.showVac){o+=L(gx,y(vacG),ox1,y(vac0),'vac')+L(px0,y(vacG),gx,y(vacG),'vac')}
+  // semiconductor
+  const idx=selIdx(R.P,xs);const path=a=>'M'+idx.map(i=>`${r1(xs(R.P.X[i]))},${r1(y(a[i]))}`).join('L');
+  if(MS.showVac){const v=Ecx.map(e=>e+s.chi);o+=P(path(v),'vac')+T(px1,y(v[v.length-1])-6,sb('E','vac'),'mut halo','end')}
+  if(MS.showEi){const ei=Evx.map(e=>e+s.Ei);o+=P(path(ei),'ei')+T(px1,y(ei[ei.length-1])+(s.isN?14:-5),sb('E','i'),'mut halo','end')}
+  if(s.dE>0.09){const lv=s.isN?Ecx.map(e=>e-s.dE):Evx.map(e=>e+s.dE);o+=P(path(lv),'lvl')}
+  if(MS.showCar){let i=0;
+    for(let X=ox1+2;X<px1;X+=4.5,i++){const xd=(X-ox1)/(px1-ox1)*Lx;let j=0;while(j<R.P.X.length-1&&R.P.X[j+1]<xd)j++;
+      const tt=R.P.X[j+1]!==undefined?Math.min(Math.max((xd-R.P.X[j])/Math.max(R.P.X[j+1]-R.P.X[j],1e-30),0),1):0;
+      const u=R.P.U[j]+(R.P.U[j+1]!==undefined?(R.P.U[j+1]-R.P.U[j])*tt:0);
+      const ec=R.Ecb-VT*u,ecY=y(ec),evY=y(ec-s.Eg);
+      const n=R.F.nAt(u)/s.nmaj,p=R.F.pAt(u)/s.nmaj,en=1.6*Math.min(n,2.2),ep=1.6*Math.min(p,2.2);
+      for(let k=0;k<3;k++){
+        if(hash(i*7+k+900)<en-k)o+=`<circle cx="${r1(X+hash(i*13+k)*2)}" cy="${r1(ecY-3-hash(i*3+k*11)*10)}" r="1.9" class="ed"/>`;
+        if(hash(i*5+k+999)<ep-k)o+=`<circle cx="${r1(X+hash(i*17+k)*2)}" cy="${r1(evY+3+hash(i*19+k*7)*10)}" r="2" class="hd"/>`;}}}
+  o+=P(path(Ecx),'band')+P(path(Evx),'band');
+  o+=L(ox1,y(0),px1,y(0),'ef')+T(px1-34,y(0)+(s.isN?15:-5),sb('E','F,s'),'halo','end');
+  o+=T(px1-4,y(Ecx[Ecx.length-1])-6,sb('E','C'),'halo','end')+T(px1-4,y(Evx[Evx.length-1])+16,sb('E','V'),'halo','end');
+  o+=T((ox1+px1)/2,bot-8,sideLbl(s),'mut halo','middle');
+  // qV_G
+  if(Math.abs(MS.VG)>0.02){const ax=gx-16;o+=L(ax-8,y(0),ox1,y(0),'guide')+arrow(ax,y(R.EFm),y(0))+T(ax-6,(y(R.EFm)+y(0))/2+4,`qV<tspan font-size="72%" dy="3.5">G</tspan><tspan dy="-3.5"> = ${Math.abs(MS.VG).toFixed(2)}</tspan>`,'m halo','end')}
+  // ψs
+  if(Math.abs(R.psi)>0.03){const xb=xs(0.8*Lx);const Eb=R.Ecb,E0=Ecx[0];
+    o+=L(ox1,y(E0),xb+6,y(E0),'guide')+arrow(xb,y(Eb),y(E0))+T(xb-8,(y(Eb)+y(E0))/2+4,`qψ<tspan font-size="72%" dy="3.5">s</tspan><tspan dy="-3.5"> = ${Math.abs(R.psi).toFixed(2)}</tspan>`,'m halo','end')}
+  // φB
+  if(MS.showEi&&R.phiB>0.05){const xb=xs(0.93*Lx),ei=Evx[Evx.length-1]+s.Ei;o+=arrow(xb,y(ei),y(0))+T(xb-6,(y(ei)+y(0))/2+4,`qφ<tspan font-size="72%" dy="3.5">B</tspan>`,'m halo','end')}
+  // W
+  if(R.W>0){const X=xs(R.W);if(X<px1)o+=L(X,top+16,X,bot,'guide')+T(X,top+11,`W = ${len(R.W)}`,'m halo','middle')}
+  return svg(W,H,o,'MOS band diagram under gate bias');
+}
+function mframe(Lx){const W=520,H=300,top=20,bot=H-44,px0=74,gx=124,ox1=176,px1=508;return {W,H,top,bot,px0,gx,ox1,px1,xs:x=>ox1+x/Lx*(px1-ox1)}}
+function maxis(F,Lx){const xu=xUnit(Lx);let o=L(F.ox1,F.bot,F.px1,F.bot,'ax');
+  for(const t of ticks(0,Lx*xu.f,5)){const X=F.xs(t/xu.f);o+=L(X,F.bot,X,F.bot+4,'ax')+T(X,F.bot+17,(+t.toPrecision(4)),'m mut','middle')}
+  return o+T(F.px1,F.bot+34,`depth (${xu.u}) →`,'mut','end')}
+function mdrawCharge(R){
+  const F=mframe(R.L),s=R.s;const rho=R.P.U.map(u=>R.F.rho(u));
+  let m=0;for(const v of rho)m=Math.max(m,Math.abs(v));if(m===0)m=s.N;
+  const cap=Math.min(m,4*s.N),lim=cap*1.15,clipped=m>cap*1.01;
+  const mid=(F.top+F.bot)/2,y=v=>mid-Math.max(-lim,Math.min(lim,v))/lim*(F.bot-F.top)/2;const sc=scaleY(cap);
+  let o='';
+  for(const t of ticks(-lim/sc.f,lim/sc.f,4)){const Y=y(t*sc.f);o+=L(F.ox1,Y,F.px1,Y,'gr')+T(F.px0-6,Y+4,(+t.toFixed(2)).toString().replace('-','−'),'m mut','end')}
+  o+=`<text transform="translate(16 ${r1(mid)}) rotate(-90)" text-anchor="middle" class="mut">ρ/q (10${sup(sc.e)} cm⁻³)</text>`;
+  o+=`<rect x="${F.px0}" y="${F.top}" width="${F.gx-F.px0}" height="${F.bot-F.top}" class="mfill" opacity=".55"/><rect x="${F.gx}" y="${F.top}" width="${F.ox1-F.gx}" height="${F.bot-F.top}" class="oxfill"/>`;
+  o+=T((F.px0+F.gx)/2,F.top+14,'gate','mut','middle')+T((F.gx+F.ox1)/2,F.top+14,R.ox.name,'mut','middle');
+  o+=L(F.px0,mid,F.px1,mid,'ax')+L(F.px0,F.top,F.px0,F.bot,'ax');
+  const idx=selIdx(R.P,F.xs);const pos=[],ng=[];for(const i of idx){const X=r1(F.xs(R.P.X[i]));pos.push(`${X},${r1(y(Math.max(rho[i],0)))}`);ng.push(`${X},${r1(y(Math.min(rho[i],0)))}`)}
+  const xe=r1(F.xs(R.P.X[idx[idx.length-1]])),x0=r1(F.ox1);
+  o+=`<path d="M${x0},${r1(mid)}L${pos.join('L')}L${xe},${r1(mid)}Z" class="pf"/><path d="M${x0},${r1(mid)}L${ng.join('L')}L${xe},${r1(mid)}Z" class="nf"/>`;
+  let g=0;for(let X=F.ox1+9;X<F.px1-4;X+=15,g++){const xd=(X-F.ox1)/(F.px1-F.ox1)*R.L;let j=0;while(j<R.P.X.length-1&&R.P.X[j+1]<xd)j++;
+    const v=rho[j],h=Math.abs(y(v)-mid);if(h<13)continue;for(let yy=10;yy<h-2;yy+=14)o+=T(X,v>0?mid-yy+4:mid+yy+4,v>0?'+':'−',v>0?'pt':'nt','middle')}
+  if(clipped){const v=rho[0];o+=T(F.px1-4,v>0?F.top+28:F.bot-6,`surface peak ${v>0?'+':'−'}${sci(Math.abs(v))} cm⁻³ (clipped)`,'m halo','end')}
+  const bar=(x,q,lab,right)=>{if(Math.abs(q)<1e-14)return '';const p=q>0,h=(F.bot-F.top)/2-6;
+    return `<rect x="${r1(x-3)}" y="${r1(p?mid-h:mid)}" width="6" height="${r1(h)}" class="${p?'pf':'nf'}"/>`};
+  o+=bar(F.gx,R.QG)+bar(F.ox1,R.Qf);
+  const q=v=>`${v>=0?'+':'−'}${sci(Math.abs(v)/Q)}`;
+  o+=T(F.gx+6,R.QG>0?F.top+30:F.bot-8,`Q<tspan font-size="72%" dy="3.5">G</tspan><tspan dy="-3.5"> ${q(R.QG)}</tspan>`,'m halo','start');
+  if(Math.abs(R.Qf)>0)o+=T(F.ox1+6,R.Qf>0?F.top+46:F.bot-24,`Q<tspan font-size="72%" dy="3.5">f</tspan><tspan dy="-3.5"> ${q(R.Qf)}</tspan>`,'m halo','start');
+  o+=T(F.px1-4,F.top+12,`semiconductor: ${q(R.Qsv)} q/cm²`,'m mut halo','end');
+  o+=maxis(F,R.L);
+  return svg(F.W,F.H,o,'Charge distribution in the MOS capacitor');
+}
+function mdrawField(R){
+  const F=mframe(R.L);const e=R.P.U.map(u=>-VT*R.F.fu(u));
+  let mx=Math.max(0,R.Eox,...e),mn=Math.min(0,R.Eox,...e);if(mx-mn===0)mx=1;const m=Math.max(mx,-mn);
+  let unit='V/cm',uf=1;if(m>=1e6){unit='MV/cm';uf=1e6}else if(m>=1e3){unit='kV/cm';uf=1e3}
+  const pad=(mx-mn)*0.12,yT=mx+pad,yB=mn-pad,y=v=>F.top+(yT-v)/(yT-yB)*(F.bot-F.top);let o='';
+  for(const t of ticks(yB/uf,yT/uf,5)){const Y=y(t*uf);o+=L(F.px0,Y,F.px1,Y,'gr')+T(F.px0-6,Y+4,(+t.toPrecision(3)).toString().replace('-','−'),'m mut','end')}
+  o+=`<text transform="translate(16 ${r1((F.top+F.bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">ℰ (${unit})</text>`;
+  o+=`<rect x="${F.px0}" y="${F.top}" width="${F.gx-F.px0}" height="${F.bot-F.top}" class="mfill" opacity=".55"/><rect x="${F.gx}" y="${F.top}" width="${F.ox1-F.gx}" height="${F.bot-F.top}" class="oxfill"/>`;
+  o+=L(F.px0,F.top,F.px0,F.bot,'ax');
+  const idx=selIdx(R.P,F.xs);const line=idx.map(i=>`${r1(F.xs(R.P.X[i]))},${r1(y(e[i]))}`);const xe=r1(F.xs(R.P.X[idx[idx.length-1]]));
+  o+=`<path d="M${F.gx},${r1(y(0))}L${F.gx},${r1(y(R.Eox))}L${F.ox1},${r1(y(R.Eox))}L${F.ox1},${r1(y(0))}Z" class="efill"/>`;
+  o+=`<path d="M${F.ox1},${r1(y(0))}L${line.join('L')}L${xe},${r1(y(0))}Z" class="efill"/>`;
+  o+=`<path d="M${F.px0},${r1(y(0))}L${F.gx},${r1(y(0))}L${F.gx},${r1(y(R.Eox))}L${F.ox1},${r1(y(R.Eox))}L${line.join('L')}" class="eline"/>`;
+  o+=L(F.px0,y(0),F.px1,y(0),'ax');
+  const lab=(v,sub)=>`ℰ<tspan font-size="72%" dy="3.5">${sub}</tspan><tspan dy="-3.5"> = ${v<0?'−':''}${sci(Math.abs(v))} V/cm</tspan>`;
+  o+=T((F.gx+F.ox1)/2,y(R.Eox)+(R.Eox>=0?-8:16),lab(R.Eox,'ox'),'m halo','middle');
+  o+=`<circle cx="${r1(F.ox1)}" cy="${r1(y(e[0]))}" r="3.5" class="efc"/>`+T(F.ox1+8,y(e[0])+(e[0]>=0?14:-8),lab(e[0],'s'),'m halo');
+  o+=T(F.px1-4,F.top+12,`ε_ox·ℰ_ox − ε_s·ℰ_s = −Q_f`,'m mut halo','end');
+  o+=maxis(F,R.L);
+  return svg(F.W,F.H,o,'Electric field in the MOS capacitor');
+}
+function mdrawCV(R,C){
+  const W=900,H=330,top=40,bot=H-42,px0=84,px1=884,Vlo=R.Vlo,Vhi=R.Vhi;
+  const xs=v=>px0+(v-Vlo)/(Vhi-Vlo)*(px1-px0),y=c=>bot-c/1.08*(bot-top);let o='';
+  for(const t of [0,0.2,0.4,0.6,0.8,1]){const Y=y(t);o+=L(px0,Y,px1,Y,'gr')+T(px0-7,Y+4,t.toFixed(1),'m mut','end')}
+  for(const t of ticks(Vlo,Vhi,8)){const X=xs(t);o+=L(X,top,X,bot,'gr')+L(X,bot,X,bot+4,'ax')+T(X,bot+17,(+t.toFixed(2)).toString().replace('-','−'),'m mut','middle')}
+  o+=L(px0,top,px0,bot,'ax')+L(px0,bot,px1,bot,'ax');
+  o+=`<text transform="translate(22 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">C / C<tspan font-size="72%" dy="3">ox</tspan></text>`;
+  o+=T(px1,bot+34,'gate voltage V_G (volts) →','mut','end');
+  const vl=(v,lab)=>{if(v<Vlo||v>Vhi)return '';const X=xs(v);return L(X,top,X,bot,'guide')+T(X+5,bot-8,lab,'m halo')};
+  o+=vl(R.VFB,'V<tspan font-size="72%" dy="3">FB</tspan>')+vl(R.VTh,'V<tspan font-size="72%" dy="3">T</tspan>');
+  const path=k=>'M'+C.pts.map(p=>`${r1(xs(p.V))},${r1(y(p[k]))}`).join('L');
+  o+=P(path('dd'),'ivgr')+P(path('hf'),'ivn')+P(path('lf'),'iv');
+  // operating point
+  const near=C.pts.reduce((a,p)=>Math.abs(p.V-MS.VG)<Math.abs(a.V-MS.VG)?p:a,C.pts[0]);
+  const k=MS.mode==='eq'?'lf':'dd';
+  const Cs=R.dQ(R.F,R.us),cop=1/(1+R.Cox/Math.max(Cs,1e-30));
+  o+=`<circle cx="${r1(xs(MS.VG))}" cy="${r1(y(cop))}" r="5" class="ivdot"/>`;
+  if(MS.mode==='eq'){const ch=1/(1+R.Cox/Math.max(R.dQ(R.Fd,R.us),1e-30));o+=`<circle cx="${r1(xs(MS.VG))}" cy="${r1(y(ch))}" r="3.5" class="hfdot"/>`}
+  let lx=px0,ly=16;for(const [c,t] of [['iv','low frequency (quasi-static)'],['ivn','high frequency'],['ivgr','deep depletion (fast sweep)']]){o+=L(lx,ly,lx+26,ly,c)+T(lx+32,ly+4,t,'mut');lx+=32+t.length*6.6+28}
+  const accLeft=!R.s.isN;
+  o+=T(accLeft?px0+8:px1-8,top+14,'accumulation','mut halo',accLeft?'start':'end')+T(accLeft?px1-8:px0+8,top+14,'inversion','mut halo',accLeft?'end':'start');
+  return svg(W,H,o,'Capacitance–voltage curves');
+}
+
+/* ---------- readouts ---------- */
+const REG={flat:['Flat band','ohmic'],acc:['Accumulation','ohmic'],dep:['Depletion','schottky'],weak:['Weak inversion','schottky'],strong:['Strong inversion','tunnel'],deep:['Deep depletion','schottky']};
+function mreadouts(R,C){
+  const s=R.s,[txt,cls]=REG[R.reg];
+  $('mpill').className='pill '+cls;$('mpill').textContent=txt;
+  $('msub').textContent=`${MS.gate} / ${R.ox.name} / ${sideLbl(s)} · ${s.isN?'inverts with negative gate bias':'inverts with positive gate bias'}`;
+  const w=[];const Eabs=Math.abs(R.Eox)/1e6;
+  if(Eabs>R.ox.Ebd)w.push(`Oxide field ${Eabs.toFixed(1)} MV/cm exceeds the ~${R.ox.Ebd} MV/cm breakdown field of ${R.ox.name}`);
+  if(s.deg)w.push('Substrate is near degeneracy: Boltzmann statistics overstate the Fermi-level shift');
+  const surfMaj=s.isN?R.F.nAt(R.us):R.F.pAt(R.us),surfMin=s.isN?R.F.pAt(R.us):R.F.nAt(R.us),Nl=s.isN?s.m.Nc:s.m.Nv,Nm=s.isN?s.m.Nv:s.m.Nc;
+  if(surfMaj>Nl||surfMin>Nm)w.push('Surface layer is degenerate: Boltzmann statistics overstate its charge');
+  if(s.ni<1e3&&(R.reg==='strong'||R.reg==='weak'))w.push(`n_i ≈ ${sci(s.ni)} cm⁻³: thermal generation is far too slow to form this inversion layer in practice, so real ${nm(s.mat)} capacitors stay in deep depletion`);
+  $('mwarns').innerHTML=w.map(x=>`<span class="warn">${x}</span>`).join(' ');
+  const eot=10**MS.ltox*3.9/R.ox.k;
+  const items=[
+    ['Φ_ms = φ_m − φ_s',`${f3(R.phims)} V`],['Flat-band V_FB',`${f3(R.VFB)} V`],['Threshold V_T (ψ_s = 2φ_B)',`${f3(R.VTh)} V`],
+    ['qφ_B · 2qφ_B',`${R.phiB.toFixed(3)} · ${(2*R.phiB).toFixed(3)} eV`],
+    ['C_ox · EOT',`${sci(R.Cox)} F/cm² · ${eot.toFixed(2)} nm`],
+    ['Surface potential ψ_s',`${f3(R.psi)} V`],['Oxide drop V_ox',`${f3(R.Vox)} V`],
+    [R.dep?'Depletion width W':'Debye length L_D',R.dep?len(R.W):len(s.LD)],['W_max (at V_T)',len(R.Wmax)],
+    ['Inversion carriers',R.inv>1?`${sci(R.inv)} cm⁻²`:'—'],['Accumulated carriers',R.acc>1?`${sci(R.acc)} cm⁻²`:'—'],
+    ['ℰ_ox · ℰ_s',`${sci(R.Eox)} · ${sci(R.Es)} V/cm`]
+  ];
+  $('mkv').innerHTML=items.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+  const Cs=R.dQ(R.F,R.us),c=1/(1+R.Cox/Math.max(Cs,1e-30)),ch=1/(1+R.Cox/Math.max(R.dQ(R.Fd,R.us),1e-30));
+  const cv=[['C/C_ox at V_G',MS.mode==='eq'?`LF ${c.toFixed(3)} · HF ${ch.toFixed(3)}`:`${c.toFixed(3)} (deep depletion)`],
+    ['HF minimum C_min/C_ox',C.cmin.toFixed(3)],['C_ox',`${(R.Cox*1e6).toFixed(3)} µF/cm²`],['Flat-band C_FB/C_ox',(()=>{const u=R.solve(R.Fe,R.VFB);return (1/(1+R.Cox/R.dQ(R.Fe,u))).toFixed(3)})()]];
+  $('mcvkv').innerHTML=cv.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
+}
+function mstory(R){
+  const s=R.s,maj=s.isN?'electrons':'holes',min=s.isN?'holes':'electrons',dopIon=s.isN?'ionized donors (+)':'ionized acceptors (−)';
+  const towards=s.isN?'positive':'negative',away=s.isN?'negative':'positive';
+  let t=`Before contact the gate and the substrate Fermi levels differ by Φ_ms = ${f2(R.phims)} V. Once they are connected, that difference has to be split between the oxide and band bending at the surface, so the bands are flat only at V_FB = ${f2(R.VFB)} V${Math.abs(R.Qf)>0?`, which the fixed oxide charge shifts by ${f2(-R.Qf/R.Cox)} V`:''}. `;
+  switch(R.reg){
+    case 'flat':t+=`At this gate voltage the surface is at flat band: no field in the semiconductor and no net charge.`;break;
+    case 'acc':t+=`A ${towards} gate (relative to V_FB) attracts majority ${maj} to the surface. They pile up in an accumulation layer only a few nanometers thick (${sci(R.acc)} cm⁻²), so the capacitance is close to C_ox.`;break;
+    case 'dep':t+=`A ${away} gate (relative to V_FB) pushes majority ${maj} away from the surface. That exposes ${dopIon} in a depletion region ${len(R.W)} deep, and the bands bend by ${Math.abs(R.psi).toFixed(2)} eV. The depletion capacitance is in series with C_ox, so C drops below C_ox.`;break;
+    case 'weak':t+=`The surface has bent past E_i (ψ_s > φ_B), so ${min} now outnumber ${maj} at the surface. This is weak inversion: the inversion charge (${sci(R.inv)} cm⁻²) is still small next to the depletion charge and grows exponentially with ψ_s. This subthreshold region sets a MOSFET's subthreshold swing.`;break;
+    case 'strong':t+=`Past threshold (ψ_s ≥ 2φ_B, V_T = ${f2(R.VTh)} V) the ${min} concentration at the surface exceeds the bulk ${maj} concentration. A thin inversion layer of ${sci(R.inv)} cm⁻² forms and screens any further gate charge. ψ_s barely moves and the depletion width stops at W_max ≈ ${len(R.Wmax)}. This inversion layer is the MOSFET channel. In the low-frequency C–V the inversion layer follows the signal and C returns to C_ox. At high frequency it cannot, so C stays at C_min.`;break;
+    case 'deep':t+=`The gate is past threshold, but no ${min} are available to form an inversion layer. The depletion region keeps growing (${len(R.W)}, beyond W_max = ${len(R.Wmax)}) and ψ_s climbs to ${Math.abs(R.psi).toFixed(2)} V. Thermal generation would eventually fill the inversion layer and relax the capacitor to equilibrium. CCDs and pulsed C–V lifetime measurements rely on this transient.`;break;
+  }
+  $('mstory').textContent=t;
+}
+
+/* ---------- UI ---------- */
+function fillDop(){const sd=MS.S,ds=JM[sd.mat][sd.type];if(!(sd.dop in ds))sd.dop=Object.keys(ds)[0];
+  $('mSdop').innerHTML=Object.entries(ds).map(([d,v])=>`<option value="${d}" ${d===sd.dop?'selected':''}>${d} · ${(v*1000).toFixed(v<0.01?1:0)} meV</option>`).join('')}
+function setMat(mat){MS.S.mat=mat;MS.S.Eg=JM[mat].Eg;MS.S.chi=JM[mat].chi;fillDop();$('mSmat').value=mat}
+function logNforEF(target){const sd=MS.S,m=JM[sd.mat],dE=m[sd.type][sd.dop];let lo=13,hi=19;const up=sd.type==='n';
+  for(let i=0;i<60;i++){const mid=(lo+hi)/2;const e=solveEF(m,sd.type,10**mid,dE,sd.Eg);if((e<target)===up)lo=mid;else hi=mid}return (lo+hi)/2}
+function syncGate(){const hit=Object.entries(GATES).find(([k,v])=>k===MS.gate&&Math.abs(v-MS.phim)<0.005)||Object.entries(GATES).find(([k,v])=>Math.abs(v-MS.phim)<0.005);MS.gate=hit?hit[0]:'custom';$('mGate').value=MS.gate}
+function mupdate(){
+  const R=mcompute(),s=R.s,m=JM[MS.S.mat];
+  $('mPhim').value=MS.phim;$('mPhimO').textContent=MS.phim.toFixed(2)+' eV';
+  $('mTox').value=MS.ltox;$('mToxO').textContent=len(10**MS.ltox*1e-7)+` · EOT ${(10**MS.ltox*3.9/R.ox.k).toFixed(2)} nm`;
+  $('mQf').value=MS.qf;$('mQfO').textContent=MS.qf===0?'0 q/cm²':`${MS.qf>0?'+':'−'}${sci(Math.abs(MS.qf)*1e10)} cm⁻²`;
+  $('mStn').setAttribute('aria-pressed',MS.S.type==='n');$('mStp').setAttribute('aria-pressed',MS.S.type==='p');
+  $('mSNL').innerHTML=MS.S.type==='n'?'Concentration N<sub>D</sub>':'Concentration N<sub>A</sub>';
+  $('mSN').value=MS.S.logN;$('mSNO').textContent=sci(s.N)+' cm⁻³';
+  $('mSEF').max=MS.S.Eg.toFixed(3);$('mSEF').value=s.EF;$('mSEFO').textContent=s.EF.toFixed(3)+' eV';
+  $('mSEg').value=MS.S.Eg;$('mSEgO').textContent=MS.S.Eg.toFixed(2)+' eV';$('mSEgT').textContent=Math.abs(MS.S.Eg-m.Eg)>0.004?'modified':'';
+  $('mSchi').value=MS.S.chi;$('mSchiO').textContent=MS.S.chi.toFixed(2)+' eV';$('mSchiT').textContent=Math.abs(MS.S.chi-m.chi)>0.004?'modified':'';
+  const v=$('mVG');v.min=R.Vlo;v.max=R.Vhi;v.step=Math.max(0.005,(R.Vhi-R.Vlo)/400).toFixed(3);v.value=MS.VG;
+  $('mVGO').textContent=(MS.VG>=0?'+':'−')+Math.abs(MS.VG).toFixed(2)+' V';
+  $('mVGhint').textContent=`Range follows V_FB and V_T. Inversion is toward ${s.isN?'negative':'positive'} V_G for ${s.type}-type.`;
+  $('mEq').setAttribute('aria-pressed',MS.mode==='eq');$('mDD').setAttribute('aria-pressed',MS.mode!=='eq');
+  for(const z of [1,10,100])$('mZ'+z).setAttribute('aria-pressed',MS.zoom===z);
+  $('mf2cap').innerHTML=`Fig. 2 · MOS band diagram<small>V<sub>G</sub> = ${f2(MS.VG)} V${MS.mode==='eq'?'':' · deep depletion'}</small>`;
+  $('mf1').innerHTML=mdrawBefore(R);$('mf2').innerHTML=mdrawAfter(R);$('mf3').innerHTML=mdrawCharge(R);$('mf4').innerHTML=mdrawField(R);
+  const key=JSON.stringify([MS.S,MS.phim,MS.ox,MS.ltox,MS.qf]);if(key!==cvKey){cvKey=key;cvCache=mCV(R)}
+  $('mf5').innerHTML=mdrawCV(R,cvCache);
+  mreadouts(R,cvCache);mstory(R);
+}
+function minit(){
+  $('msemi').innerHTML=semiHTML();
+  $('mGate').innerHTML=Object.entries(GATES).map(([k,v])=>`<option value="${k}">${k} · ${v.toFixed(2)} eV</option>`).join('')+'<option value="custom">Custom</option>';
+  $('mOx').innerHTML=Object.entries(OX).map(([k,v])=>`<option value="${k}">${v.name} · κ ${v.k}, E<sub>g</sub> ${v.Eg} eV</option>`.replace(/<\/?sub>/g,'')).join('');
+  $('mSmat').innerHTML=Object.entries(JM).map(([k,v])=>`<option value="${k}">${nm(k)} · Eg ${v.Eg.toFixed(2)}, χ ${v.chi.toFixed(2)} eV</option>`).join('');
+  $('mGate').value=MS.gate;$('mOx').value=MS.ox;$('mSmat').value=MS.S.mat;fillDop();
+  $('mGate').onchange=e=>{if(e.target.value!=='custom'){MS.gate=e.target.value;MS.phim=GATES[MS.gate]}else MS.gate='custom';mupdate()};
+  $('mPhim').oninput=e=>{MS.phim=+e.target.value;syncGate();mupdate()};
+  $('mOx').onchange=e=>{MS.ox=e.target.value;mupdate()};
+  $('mTox').oninput=e=>{MS.ltox=+e.target.value;mupdate()};
+  $('mQf').oninput=e=>{MS.qf=+e.target.value;mupdate()};
+  $('mSmat').onchange=e=>{setMat(e.target.value);mupdate()};
+  $('mStn').onclick=()=>{MS.S.type='n';fillDop();MS.VG=0;mupdate()};
+  $('mStp').onclick=()=>{MS.S.type='p';fillDop();MS.VG=0;mupdate()};
+  $('mSdop').onchange=e=>{MS.S.dop=e.target.value;mupdate()};
+  $('mSN').oninput=e=>{MS.S.logN=+e.target.value;mupdate()};
+  $('mSEF').oninput=e=>{MS.S.logN=logNforEF(+e.target.value);mupdate()};
+  $('mSEg').oninput=e=>{MS.S.Eg=+e.target.value;mupdate()};
+  $('mSchi').oninput=e=>{MS.S.chi=+e.target.value;mupdate()};
+  $('mVG').oninput=e=>{MS.VG=+e.target.value;mupdate()};
+  $('mEq').onclick=()=>{MS.mode='eq';mupdate()};$('mDD').onclick=()=>{MS.mode='dd';mupdate()};
+  $('mVac').onchange=e=>{MS.showVac=e.target.checked;mupdate()};
+  $('mCar').onchange=e=>{MS.showCar=e.target.checked;mupdate()};
+  $('mEi').onchange=e=>{MS.showEi=e.target.checked;mupdate()};
+  for(const z of [1,10,100])$('mZ'+z).onclick=()=>{MS.zoom=z;mupdate()};
+  const pr=$('mpresets');
+  for(const [lab,p] of MPRE){const b=document.createElement('button');b.className='chip';b.textContent=lab;
+    b.onclick=()=>{MS.gate=p.gate;MS.phim=GATES[p.gate];$('mGate').value=p.gate;MS.ox=p.ox;$('mOx').value=p.ox;MS.ltox=Math.log10(p.tox);MS.qf=p.qf;
+      const [mat,type,dop,logN]=p.S;MS.S.type=type;setMat(mat);MS.S.dop=dop;fillDop();MS.S.logN=logN;MS.VG=p.VG;MS.mode='eq';MS.zoom=1;mupdate()};pr.appendChild(b)}
+  mupdate();
+}
+minit();
+})();
+
+</script>
+
+</body>
+</html>
