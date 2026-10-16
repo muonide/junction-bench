@@ -120,6 +120,25 @@ svg .dnd{stroke:var(--neg);stroke-width:1.1;stroke-dasharray:3 3;fill:none}svg .
 svg .polp{fill:var(--pos)}svg .poln{fill:var(--neg)}
 svg .wfe{stroke:var(--neg);stroke-width:2.2;fill:none}svg .wfh{stroke:var(--pos);stroke-width:2.2;fill:none}
 svg .stick{fill:var(--ef)}
+.tabrow{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabrow .tabs{border-bottom:0;margin-bottom:0;flex:1 1 auto;min-width:0}
+.modesw{display:flex;align-items:center;gap:8px;padding-bottom:8px;font-size:13px;color:var(--muted)}
+.modesw #modeLbl{display:none}
+#advSw{position:relative;width:40px;height:22px;border-radius:999px;border:1px solid var(--line);background:var(--chip);cursor:pointer;padding:0;transition:background .15s}
+#advSw .knob{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+#advSw[aria-checked=true]{background:var(--ef);border-color:var(--ef)}
+#advSw[aria-checked=true] .knob{left:20px}
+#modeSwL{font-family:var(--f-display);font-weight:600;color:var(--ink)}
+body.basic .adv{display:none!important}
+body:not(.basic) .basic-only{display:none!important}
+body.basic .presets{display:none}
+.presets button.chip[aria-pressed=true]{border-color:var(--ink);background:var(--chip);font-weight:600}
+.exlist{display:flex;flex-direction:column;gap:4px}
+.exlist button{font:inherit;font-size:13px;text-align:left;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:6px 10px;cursor:pointer;line-height:1.35}
+.exlist button:hover{border-color:var(--ink)}
+.exlist button[aria-pressed=true]{background:var(--ink);color:var(--panel);border-color:var(--ink);font-weight:500}
+.basic-note,fieldset>.hint{font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){#advSw,#advSw .knob{transition:none}}
 .notes{font-size:12.5px;color:var(--muted);max-width:110ch}
 .notes summary{cursor:pointer;font-weight:500;color:var(--ink)}
 /* SVG */
@@ -159,18 +178,21 @@ svg .efc{fill:var(--ef)}
   <p>Pick the materials and doping, then watch the Fermi levels align, charge move across the interface, and the bands bend. Covers Schottky and ohmic contacts, p–n homo- and heterojunctions, MOS capacitors, and quantum wells, HEMTs, lasers and tunneling diodes. 300 K.</p>
 </header>
 
+<div class="tabrow">
 <nav class="tabs" role="tablist" aria-label="Junction type">
   <button role="tab" id="tabbtn-ms" aria-controls="tab-ms" aria-selected="true">Metal–semiconductor</button>
   <button role="tab" id="tabbtn-hj" aria-controls="tab-hj" aria-selected="false">Semiconductor–semiconductor</button>
   <button role="tab" id="tabbtn-mos" aria-controls="tab-mos" aria-selected="false">MOS capacitor</button>
   <button role="tab" id="tabbtn-hs" aria-controls="tab-hs" aria-selected="false">Heterostructures</button>
 </nav>
+<div class="modesw"><span id="modeLbl">Basic mode</span><button type="button" role="switch" id="advSw" aria-checked="false" aria-labelledby="modeSwL"><span class="knob"></span></button><span id="modeSwL">Advanced</span></div>
+</div>
 <section id="tab-ms" class="tabpanel" role="tabpanel" aria-labelledby="tabbtn-ms">
 <div class="presets" id="presets"><span>Try</span></div>
 
 <div class="main">
 <aside class="rail" aria-label="Contact parameters">
-  <fieldset>
+  <fieldset class="adv">
     <legend>Metal</legend>
     <div class="ctl"><select id="metalSel" aria-label="Metal"></select></div>
     <div class="ctl">
@@ -179,7 +201,7 @@ svg .efc{fill:var(--ef)}
     </div>
   </fieldset>
 
-  <fieldset>
+  <fieldset class="adv">
     <legend>Semiconductor</legend>
     <div class="ctl"><select id="semiSel" aria-label="Semiconductor"></select></div>
     <div class="ctl">
@@ -192,7 +214,7 @@ svg .efc{fill:var(--ef)}
     </div>
   </fieldset>
 
-  <fieldset>
+  <fieldset class="adv">
     <legend>Doping &amp; Fermi level</legend>
     <div class="seg" role="group" aria-label="Doping type">
       <button id="typeN" aria-pressed="true">n-type (donor)</button>
@@ -211,8 +233,8 @@ svg .efc{fill:var(--ef)}
   </fieldset>
 
   <fieldset>
-    <legend>Interface &amp; bias</legend>
-    <div class="ctl">
+    <legend><span class="adv">Interface &amp; bias</span><span class="basic-only">Operating point</span></legend>
+    <div class="ctl adv">
       <div class="row"><label for="pin">Pinning factor S</label><output id="pinO"></output></div>
       <input type="range" id="pin" min="0" max="1" step="0.01">
       <span class="hint">1 = ideal Schottky–Mott. 0 = E<sub>F</sub> fully pinned at the charge-neutrality level.</span>
@@ -224,7 +246,7 @@ svg .efc{fill:var(--ef)}
     </div>
   </fieldset>
 
-  <fieldset>
+  <fieldset class="adv">
     <legend>Display</legend>
     <div class="checks">
       <label><input type="checkbox" id="showVac" checked> Vacuum level in contact diagram</label>
@@ -267,11 +289,11 @@ svg .efc{fill:var(--ef)}
 <div class="presets" id="jpresets"><span>Try</span></div>
 <div class="main">
 <aside class="rail" aria-label="Junction parameters">
-  <div id="jsideA"></div>
-  <div id="jsideB"></div>
+  <div id="jsideA" class="adv"></div>
+  <div id="jsideB" class="adv"></div>
   <fieldset>
-    <legend>Interface &amp; bias</legend>
-    <div class="ctl">
+    <legend><span class="adv">Interface &amp; bias</span><span class="basic-only">Operating point</span></legend>
+    <div class="ctl adv">
       <div class="row"><label for="jSig">Interface sheet charge σ<sub>int</sub></label><output id="jSigO"></output></div>
       <input type="range" id="jSig" min="-30" max="30" step="0.1">
       <span class="hint">Fixed charge at the interface, e.g. polarization charge in AlGaN/GaN (≈ +1×10¹³ q/cm²). Leave at 0 for the Anderson model.</span>
@@ -282,7 +304,7 @@ svg .efc{fill:var(--ef)}
       <span class="hint" id="jVhint"></span>
     </div>
   </fieldset>
-  <fieldset>
+  <fieldset class="adv">
     <legend>Display</legend>
     <div class="checks">
       <label><input type="checkbox" id="jVac"> Vacuum level in junction diagram</label>
@@ -328,13 +350,13 @@ svg .efc{fill:var(--ef)}
 <div class="presets" id="mpresets"><span>Try</span></div>
 <div class="main">
 <aside class="rail" aria-label="MOS parameters">
-  <fieldset>
+  <fieldset class="adv">
     <legend>Gate</legend>
     <div class="ctl"><select id="mGate" aria-label="Gate material"></select></div>
     <div class="ctl"><div class="row"><label for="mPhim">Work function qφ<sub>m</sub></label><output id="mPhimO"></output></div>
       <input type="range" id="mPhim" min="3.5" max="6.0" step="0.01"></div>
   </fieldset>
-  <fieldset>
+  <fieldset class="adv">
     <legend>Insulator</legend>
     <div class="ctl"><select id="mOx" aria-label="Insulator"></select></div>
     <div class="ctl"><div class="row"><label for="mTox">Thickness t<sub>ox</sub></label><output id="mToxO"></output></div>
@@ -343,16 +365,16 @@ svg .efc{fill:var(--ef)}
       <input type="range" id="mQf" min="-100" max="100" step="1">
       <span class="hint">Sheet charge at the insulator/semiconductor interface. Thermal SiO₂ on Si is typically +10¹⁰ to +10¹¹ q/cm².</span></div>
   </fieldset>
-  <div id="msemi"></div>
+  <div id="msemi" class="adv"></div>
   <fieldset>
-    <legend>Gate bias</legend>
+    <legend><span class="adv">Gate bias</span><span class="basic-only">Operating point</span></legend>
     <div class="ctl"><div class="row"><label for="mVG">Gate voltage V<sub>G</sub></label><output id="mVGO"></output></div>
       <input type="range" id="mVG" min="-3" max="3" step="0.01"><span class="hint" id="mVGhint"></span></div>
     <div class="ctl"><label>Minority carriers</label>
       <div class="seg" role="group" aria-label="Minority carrier supply"><button id="mEq" aria-pressed="true">Equilibrium (slow)</button><button id="mDD" aria-pressed="false">Deep depletion (fast)</button></div>
       <span class="hint">Deep depletion is what you get when the gate is swept faster than thermal generation can supply an inversion layer.</span></div>
   </fieldset>
-  <fieldset>
+  <fieldset class="adv">
     <legend>Display</legend>
     <div class="checks">
       <label><input type="checkbox" id="mVac"> Vacuum level</label>
@@ -397,16 +419,16 @@ svg .efc{fill:var(--ef)}
 <div class="main">
 <aside class="rail" aria-label="Heterostructure settings">
   <fieldset>
-    <legend>Surface contact</legend>
-    <div class="seg" role="group" aria-label="Surface contact"><button id="hGate" aria-pressed="true">Schottky gate</button><button id="hOhm" aria-pressed="false">Ohmic</button></div>
-    <div class="ctl" id="hPhiBc"><div class="row"><label for="hPhiB">Barrier height qφ<sub>B</sub></label><output id="hPhiBO"></output></div>
+    <legend><span class="adv">Surface contact</span><span class="basic-only">Operating point</span></legend>
+    <div class="seg adv" role="group" aria-label="Surface contact"><button id="hGate" aria-pressed="true">Schottky gate</button><button id="hOhm" aria-pressed="false">Ohmic</button></div>
+    <div class="ctl adv" id="hPhiBc"><div class="row"><label for="hPhiB">Barrier height qφ<sub>B</sub></label><output id="hPhiBO"></output></div>
       <input type="range" id="hPhiB" min="0.2" max="1.8" step="0.01"><span class="hint">Also models a pinned free surface (GaAs ≈ 0.7 eV, AlGaN ≈ 1–1.6 eV) when V<sub>G</sub> = 0.</span></div>
     <div class="ctl" id="hVGc"><div class="row"><label for="hVG">Gate voltage V<sub>G</sub></label><output id="hVGO"></output></div>
       <input type="range" id="hVG" min="-3" max="1" step="0.01"></div>
     <div class="ctl" id="hVc"><div class="row"><label for="hV">Bias V (surface contact +)</label><output id="hVO"></output></div>
       <input type="range" id="hV" min="-1" max="1" step="0.01"><span class="hint" id="hVhint"></span></div>
   </fieldset>
-  <fieldset>
+  <fieldset class="adv">
     <legend>Quantum solver</legend>
     <div class="checks">
       <label><input type="checkbox" id="hSP" checked> Self-consistent Schrödinger–Poisson</label>
@@ -415,7 +437,7 @@ svg .efc{fill:var(--ef)}
     </div>
     <span class="hint">Layers ticked Q in the table form the quantum region. Electrons there fill 2D subbands; elsewhere carriers are classical (Fermi–Dirac).</span>
   </fieldset>
-  <fieldset>
+  <fieldset class="adv">
     <legend>Display</legend>
     <div class="ctl"><label>Depth range</label>
       <div class="seg" role="group" aria-label="Depth range"><button id="hViewA" aria-pressed="true">Active region</button><button id="hViewF" aria-pressed="false">Whole stack</button></div></div>
@@ -432,7 +454,7 @@ svg .efc{fill:var(--ef)}
     <dl class="kv" id="hkv"></dl>
     <p class="story" id="hstory"></p>
   </div>
-  <figure class="stackcard">
+  <figure class="stackcard adv">
     <div class="ivhead"><figcaption>Layer stack<small>surface (left) → substrate (right) · edit any cell</small></figcaption>
       <div class="stackbtns"><button class="chip" id="hAdd">Add layer</button><button class="chip" id="hReset">Reset preset</button></div></div>
     <div class="tablewrap"><table class="stack" id="hTable"></table></div>
@@ -2472,6 +2494,33 @@ hinit();
 window.__H={HSt,HP,loadPreset,hupdateNow,get R(){return lastR},get sweep(){return sweep}};
 })();
 
+</script>
+<script>
+/* ===================== Basic / advanced mode ===================== */
+(function(){
+const tabs=[['tab-ms','presets',0],['tab-hj','jpresets',0],['tab-mos','mpresets',0],['tab-hs','hpresets',4]];
+const sel={};
+for(const [tab,pid,def] of tabs){
+  const panel=document.getElementById(tab),rail=panel.querySelector('.rail'),chips=[...document.getElementById(pid).querySelectorAll('button')];
+  const fs=document.createElement('fieldset');fs.className='basic-only';
+  fs.innerHTML='<legend>Exemplars</legend><div class="exlist" role="group" aria-label="Exemplars"></div><span class="basic-note">Switch on Advanced to change materials, doping and every other parameter.</span>';
+  const list=fs.querySelector('.exlist');
+  const mark=i=>{sel[tab]=i;[...list.children].forEach((b,j)=>b.setAttribute('aria-pressed',j===i));chips.forEach((b,j)=>b.setAttribute('aria-pressed',j===i))};
+  chips.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.textContent=c.textContent;b.onclick=()=>{c.click()};list.appendChild(b);c.addEventListener('click',()=>mark(i))});
+  rail.insertBefore(fs,rail.firstChild);
+  sel[tab]=def;mark(def);
+  if(tab==='tab-mos')chips[def].click();
+}
+const sw=document.getElementById('advSw');
+function setMode(adv,restore){
+  document.body.classList.toggle('basic',!adv);sw.setAttribute('aria-checked',adv);
+  try{localStorage.setItem('bench-mode',adv?'adv':'basic')}catch(e){}
+  if(!adv&&restore)for(const [tab,pid] of tabs){const c=document.getElementById(pid).querySelectorAll('button')[sel[tab]];if(c)c.click()}
+}
+sw.onclick=()=>setMode(sw.getAttribute('aria-checked')!=='true',true);
+let adv=false;try{adv=localStorage.getItem('bench-mode')==='adv'}catch(e){}
+setMode(adv,false);
+})();
 </script>
 
 </body>
