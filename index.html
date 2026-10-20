@@ -87,6 +87,7 @@ svg .sideA{fill:var(--grid);opacity:.55;stroke:none}
 svg .efq{stroke:var(--ef);stroke-width:1.2;stroke-dasharray:2 4;fill:none}
 svg .ivn{stroke:var(--neg);stroke-width:1.4;stroke-dasharray:6 4;fill:none}
 svg .ivp{stroke:var(--pos);stroke-width:1.4;stroke-dasharray:6 4;fill:none}
+svg .mpp{fill:var(--ef);fill-opacity:.1;stroke:var(--ef);stroke-opacity:.4;stroke-dasharray:3 3}
 svg .ivbt{stroke:var(--tun);stroke-width:1.6;stroke-dasharray:8 3 2 3;fill:none}
 svg .ivgr{stroke:var(--muted);stroke-width:1.4;stroke-dasharray:1.5 3;fill:none}
 .stackcard{padding-bottom:10px}
@@ -427,6 +428,11 @@ svg .efc{fill:var(--ef)}
     <div class="ctl" id="hVc"><div class="row"><label for="hV">Bias V (surface contact +)</label><output id="hVO"></output></div>
       <input type="range" id="hV" min="-1" max="1" step="0.01"><span class="hint" id="hVhint"></span></div>
   </fieldset>
+  <fieldset id="hSunc" hidden>
+    <legend>Illumination</legend>
+    <div class="checks"><label><input type="checkbox" id="hSun"> 1 sun, AM1.5G, entering at the surface (left)</label></div>
+    <span class="hint">Beer–Lambert absorption in every layer, with a second pass off a metal back mirror. The photogenerated electron–hole pairs feed the drift–diffusion solver.</span>
+  </fieldset>
   <fieldset class="adv">
     <legend>Quantum solver</legend>
     <div class="checks">
@@ -475,6 +481,7 @@ svg .efc{fill:var(--ef)}
     <summary>Model and assumptions</summary>
     <p><b>Materials.</b> Composition-dependent 300 K parameters for Al<sub>x</sub>Ga<sub>1−x</sub>As (Γ and X valleys; X is the lowest band for x &gt; 0.45), pseudomorphic In<sub>x</sub>Ga<sub>1−x</sub>As on GaAs, and Ga-face Al<sub>x</sub>Ga<sub>1−x</sub>N and In<sub>x</sub>Ga<sub>1−x</sub>N on GaN. Band alignments use valence-band offsets: GaAs/AlAs ΔE<sub>V</sub> = 0.53x eV (Vurgaftman 2001), with ΔE<sub>C</sub> = 0.65 ΔE<sub>g</sub> for InGaAs/GaAs and 0.7 ΔE<sub>g</sub> for the nitrides. Nitride polarization (spontaneous plus piezoelectric) uses linear fits that give σ/q ≈ 5.4×10¹³·x cm⁻² at AlGaN/GaN and ≈ 6.9×10¹³·x cm⁻² at InGaN/GaN. Strain shifts of the gaps and the light-hole band are not included. ITO is a degenerate n-type oxide (E<sub>g</sub> 3.6 eV, m* 0.4, χ<sub>eff</sub> 5.0 eV as-deposited, giving φ ≈ 4.4 eV, or 5.3 eV after UV-ozone treatment, giving φ ≈ 4.7 eV). Organic layers use literature HOMO/LUMO energies with 10²¹ cm⁻³ molecular sites and single-level (saturating) Fermi statistics. Metals are modeled as very heavily doped conductors. Dopants follow the Mott transition: their ionization energy falls as N<sup>1/3</sup>, and they ionize fully above N<sub>M</sub>.</p>
     <p><b>Organic stacks.</b> When both outer layers are conductors (ITO, PEDOT:PSS or a metal), the organic layers between them are solved with Gummel-iterated drift–diffusion. That uses Scharfetter–Gummel fluxes in quasi-Fermi-level form, so band offsets at interfaces are handled exactly, together with Langevin recombination γ = q(μ<sub>n</sub>+μ<sub>p</sub>)/ε. Carriers enter at each electrode in thermionic equilibrium, with image-force barrier lowering. Gaussian energetic disorder, field-dependent mobility, traps, excitons and outcoupling are not modeled, so absolute currents are indicative. The location of the recombination zone, the charge balance and the effect of each injection barrier are the reliable outputs.</p>
+    <p><b>Solar cells.</b> The same drift–diffusion solver runs any stack with a conductor at each end. Inorganic layers add mid-gap Shockley–Read–Hall recombination with lifetime τ (1 ms in c-Si, 10 ns in a-Si:H, 1 µs in MAPbI₃), plus Auger recombination in c-Si (C = 1.66×10⁻³⁰ cm⁶/s), so R = B<sub>eff</sub>(np − n<sub>i</sub>²). With illumination on, the photon flux in 0.02 eV bins is taken from the Shockley–Queisser short-circuit current of AM1.5G (≈43.8 mA/cm² above 1.12 eV). Light enters at the left with ideal anti-reflection and is absorbed by Beer–Lambert law. A metal at the back reflects 95 % for a second pass, but texturing and light trapping are not included. Absorption edges are parabolic for direct gaps (MAPbI₃, ITO, organics), quadratic for indirect c-Si, and Tauc-type for a-Si:H. Only pairs generated in inorganic semiconductors are collected; absorption in ITO and organic layers is a parasitic loss. a-Si:H is modeled as a crystal with an effective mobility gap (1.72 eV), a fixed dopant activation energy (0.25–0.3 eV) and a short lifetime; its band tails and dangling bonds are not resolved. "ITO, ohmic tunnel contact" shifts that ITO layer's bands so its Fermi level matches the neighbouring semiconductor's (a flat-band contact), which stands in for tunneling through the thin depletion region at a real TCO/doped-a-Si:H contact. Interface defect states, mobile ions and hysteresis are not modeled.</p>
     <p><b>Electrostatics.</b> Poisson's equation is solved by Newton iteration with finite volumes on a mesh refined to 0.1 nm at every interface. It uses Fermi–Dirac statistics (Aymerich-Humet approximation to F<sub>1/2</sub>), incomplete ionization, and bound polarization charge −dP/dz. The surface is either a Schottky contact (E<sub>C</sub> = E<sub>F,gate</sub> + qφ<sub>B</sub>) or ohmic. The substrate end is a neutral ohmic contact.</p>
     <p><b>Quantum region.</b> In layers marked Q, electrons fill 2D subbands, E<sub>i</sub> found from the BenDaniel–Duke effective-mass equation on the Γ band with hard walls at the region's edges. Each subband holds n<sub>i</sub> = (m*kT/πħ²)·ln(1+e<sup>(E<sub>F</sub>−E<sub>i</sub>)/kT</sup>). Electrons above the region's lowest edge are counted classically. Schrödinger and Poisson are iterated to self-consistency with a predictor–corrector scheme. Heavy-hole states are computed on the final potential but are not fed back into Poisson.</p>
     <p><b>Bias.</b> In p–n structures the electron and hole quasi-Fermi levels are taken as flat at their contact values. This is accurate when wide-gap cladding layers block minority injection, as in LEDs and lasers, and approximate for homojunctions. In n–i–n structures the quasi-Fermi level is interpolated linearly across the undoped region. Tunneling current uses the Tsu–Esaki formula with transfer-matrix transmission through the quantum region, resolving each resonance adaptively. It assumes coherent transport (no scattering), so valley currents are underestimated.</p>
@@ -1897,9 +1904,9 @@ const kT=VT,HB2M=0.0380998,N2D0=4.177e14,NC0=2.509e19,SQ=QE=>QE;
 const sub=s=>String(s).replace(/[0-9.]/g,c=>({'0':'₀','1':'₁','2':'₂','3':'₃','4':'₄','5':'₅','6':'₆','7':'₇','8':'₈','9':'₉','.':'.'}[c]));
 const fx=x=>(+x.toFixed(2)).toString();
 const ORG=(name,IP,EA,er,mun,mup,o)=>({name,fixed:true,org:true,conductor:!!(o&&o.conductor),x:[0,0],lab:()=>name,
-  prop(){const Ec=-EA,Ev=-IP;return {Ec,EcG:Ec,Ev,Eg:IP-EA,EgG:IP-EA,er,meG:1,mhC:1,Nc:1e21,Nv:1e21,Pz:0,Ed:0,Ea:0,ind:false,mun,mup,Brad:Q*(mun+mup)/(er*EPS0),fullIon:true,mol:true}}});
+  prop(){const Ec=-EA,Ev=-IP;return {Ec,EcG:Ec,Ev,Eg:IP-EA,EgG:IP-EA,er,meG:1,mhC:1,Nc:1e21,Nv:1e21,Pz:0,Ed:0,Ea:0,ind:false,mun,mup,Brad:Q*(mun+mup)/(er*EPS0),fullIon:true,mol:true,ab:o&&o.ab||['d',1e5,IP-EA],gen:false}}});
 const MET=(name,phi)=>({name,fixed:true,metal:true,conductor:true,x:[0,0],lab:()=>name,
-  prop(){const Ec=-phi;return {Ec,EcG:Ec,Ev:Ec-8,Eg:8,EgG:8,er:1,meG:1,mhC:1,Nc:2.5e22,Nv:1e19,Pz:0,Ed:0,Ea:0,ind:false,Brad:0,fullIon:true}}});
+  prop(){const Ec=-phi;return {Ec,EcG:Ec,Ev:Ec-8,Eg:8,EgG:8,er:1,meG:1,mhC:1,Nc:2.5e22,Nv:1e19,Pz:0,Ed:0,Ea:0,ind:false,Brad:0,fullIon:true,mirror:0.95}}});
 const ORGS={
   PEDOT:ORG('PEDOT:PSS',5.1,3.5,3.0,1e-3,1,{conductor:true}),
   NPB:ORG('NPB (α-NPD)',5.4,2.4,3.0,1e-5,5e-4),
@@ -1908,7 +1915,10 @@ const ORGS={
   TPBi:ORG('TPBi',6.2,2.7,3.0,1e-5,1e-7),
   LiFAl:MET('LiF/Al cathode (φ ≈ 2.9 eV)',2.9),
   Al:MET('Al (φ ≈ 4.2 eV)',4.2),
-  Ag:MET('Ag (φ ≈ 4.3 eV)',4.3)
+  Ag:MET('Ag (φ ≈ 4.3 eV)',4.3),
+  PTAA:ORG('PTAA',5.2,2.3,3.0,1e-6,3e-3,{ab:['d',1e5,2.9]}),
+  C60:ORG('C₆₀',6.2,3.9,4.4,5e-2,1e-4,{ab:['d',4e4,2.0]}),
+  BCPAg:MET('BCP/Ag cathode (φ ≈ 3.9 eV)',3.9)
 };
 const FAMS={
   AlGaAs:{name:'AlₓGa₁₋ₓAs',x:[0,1],lab:x=>x<=0?'GaAs':x>=1?'AlAs':`Al${sub(fx(x))}Ga${sub(fx(1-x))}As`,
@@ -1926,9 +1936,17 @@ const FAMS={
     prop(x){const Eg=3.42*(1-x)+0.7*x-1.4*x*(1-x),Ec=-4.1+0.7*(Eg-3.42),Ev=Ec-Eg,meG=0.2-0.13*x;
       return {Ec,EcG:Ec,Ev,Eg,EgG:Eg,er:8.9+6.4*x,meG,mhC:1.1,Nc:NC0*meG**1.5,Nv:NC0*1.5**1.5,Pz:(0.029-0.11*x)*1e-4,Ed:0.015,Ea:0.17,ind:false,Brad:2.4e-11}}},
   ITO:{name:'ITO (In₂O₃:Sn)',fixed:true,conductor:true,x:[0,0],lab:()=>'ITO',
-    prop(){const Ec=-5.0,Eg=3.6;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:9,meG:0.4,mhC:1,Nc:NC0*0.4**1.5,Nv:NC0,Pz:0,Ed:0.03,Ea:0.3,ind:false,Brad:0}}},
+    prop(){const Ec=-5.0,Eg=3.6;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:9,meG:0.4,mhC:1,Nc:NC0*0.4**1.5,Nv:NC0,Pz:0,Ed:0.03,Ea:0.3,ind:false,Brad:0,ab:['d',2e5,3.6],gen:false}}},
   ITOt:{name:'ITO, UV-ozone treated (φ ≈ 4.7 eV)',fixed:true,conductor:true,x:[0,0],lab:()=>'ITO (treated)',
-    prop(){const Ec=-5.3,Eg=3.6;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:9,meG:0.4,mhC:1,Nc:NC0*0.4**1.5,Nv:NC0,Pz:0,Ed:0.03,Ea:0.3,ind:false,Brad:0}}},
+    prop(){const Ec=-5.3,Eg=3.6;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:9,meG:0.4,mhC:1,Nc:NC0*0.4**1.5,Nv:NC0,Pz:0,Ed:0.03,Ea:0.3,ind:false,Brad:0,ab:['d',2e5,3.6],gen:false}}},
+  cSi:{name:'c-Si wafer',fixed:true,x:[0,0],lab:()=>'c-Si',defD:'n',defN:1e16,
+    prop(){const Ec=-4.05,Eg=1.12;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:11.7,meG:0.26,mhC:0.39,Nc:2.86e19,Nv:2.66e19,Pz:0,Ed:0.045,Ea:0.045,ind:true,mun:1250,mup:450,Brad:4.7e-15,tau:1e-3,Cau:1.66e-30,ab:['i',7e3,Eg],gen:true}}},
+  aSi:{name:'a-Si:H',fixed:true,x:[0,0],lab:()=>'a-Si:H',defD:'i',defN:0,
+    prop(){const Ec=-3.9,Eg=1.72;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:11.9,meG:0.4,mhC:0.6,Nc:2e20,Nv:2e20,Pz:0,Ed:0.25,Ea:0.3,amorph:true,ind:false,mun:20,mup:5,Brad:0,tau:1e-8,ab:['t',8e5,Eg],gen:true}}},
+  MAPI:{name:'MAPbI₃ perovskite',fixed:true,x:[0,0],lab:()=>'MAPbI₃',defD:'i',defN:0,
+    prop(){const Ec=-3.88,Eg=1.55;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:24,meG:0.2,mhC:0.25,Nc:2.2e18,Nv:2.9e18,Pz:0,Ed:0.01,Ea:0.01,ind:false,mun:10,mup:10,Brad:5e-11,tau:1e-6,ab:['d',1.5e5,Eg],gen:true}}},
+  ITOo:{name:'ITO, ohmic tunnel contact (flat band)',fixed:true,conductor:true,flat:true,x:[0,0],lab:()=>'ITO (ohmic)',
+    prop(){const Ec=-5.0,Eg=3.6;return {Ec,EcG:Ec,Ev:Ec-Eg,Eg,EgG:Eg,er:9,meG:0.4,mhC:1,Nc:NC0*0.4**1.5,Nv:NC0,Pz:0,Ed:0.03,Ea:0.3,ind:false,Brad:0,ab:['d',2e5,3.6],gen:false}}},
   ...ORGS
 };
 const compAt=(ly,dz)=>ly.x2==null||ly.x2===''?+ly.x:+ly.x+(+ly.x2-+ly.x)*Math.min(Math.max(dz/ly.t,0),1);
@@ -1939,21 +1957,26 @@ function FD(e){e=Math.max(-600,Math.min(600,e));const a=Math.abs(e-2.13),s=a**2.
   return [1/den,(em-xip)/(den*den)]}
 
 /* ---------- mesh ---------- */
+function flatShift(layers,li){ // shift a flat-band contact's bands so its Fermi level matches the neighbouring semiconductor's
+  const C=FAMS[layers[li].f];let j=li+1<layers.length&&!FAMS[layers[li+1].f].conductor?li+1:li-1>=0&&!FAMS[layers[li-1].f].conductor?li-1:-1;if(j<0)return 0;
+  const nb=layers[j],pn=FAMS[nb.f].prop(compAt(nb,j>li?0:+nb.t)),pc=C.prop(0),ly=layers[li];
+  return neutral(pn,nb.d,nb.d==='i'?0:+nb.N,0,0)-neutral(pc,ly.d,ly.d==='i'?0:+ly.N,0,0)}
 function build(layers){
   const z=[0],E=[];let z0=0;
-  layers.forEach((ly,li)=>{const t=+ly.t;ly.z0=z0;
-    const hmin=Math.min(0.1,t/8),hmax=Math.min(4,Math.max(t/12,0.2)),r=1.15;
+  const shp=(p,d)=>d?{...p,Ec:p.Ec+d,EcG:p.EcG+d,Ev:p.Ev+d}:p;
+  layers.forEach((ly,li)=>{const t=+ly.t;ly.z0=z0;const sh=FAMS[ly.f].flat?flatShift(layers,li):0;
+    const hmin=Math.min(0.1,t/8),hmax=t>3000?t/150:Math.min(4,Math.max(t/12,0.2)),r=t>3000?1.12:1.15;
     const half=[];let acc=0,h=hmin;while(acc<t/2-1e-9){half.push(h);acc+=h;h=Math.min(h*r,hmax)}
     const st=half.concat(half.slice().reverse()),s=st.reduce((a,b)=>a+b,0);
     let zz=z0;for(const hh of st){const za=zz,zb=zz+hh*t/s;zz=zb;
-      const pa=FAMS[ly.f].prop(compAt(ly,za-z0)),pb=FAMS[ly.f].prop(compAt(ly,zb-z0));
+      const pa=shp(FAMS[ly.f].prop(compAt(ly,za-z0)),sh),pb=shp(FAMS[ly.f].prop(compAt(ly,zb-z0)),sh);
       E.push({li,za,zb,h:zb-za,pa,pb,eps:(pa.er+pb.er)/2*EPS0,Pz:(pa.Pz+pb.Pz)/2,d:ly.d,N:ly.d==='i'?0:+ly.N,me:(pa.meG+pb.meG)/2,mh:(pa.mhC+pb.mhC)/2});z.push(zb)}
     z0+=t;z[z.length-1]=z0;E[E.length-1].zb=z0;});
   return {layers,z,E,nn:z.length,ne:E.length,len:z0};
 }
 
 /* ---------- charge ---------- */
-function mottE(p,t,N){if(p.fullIon)return null;const ms=t==='n'?p.meG:p.mhC,aB=p.er*0.0529e-7/ms,Nm=(0.26/aB)**3;if(N>=Nm)return null;const E0=t==='n'?p.Ed:p.Ea;return E0*(1-Math.cbrt(N/Nm))}
+function mottE(p,t,N){if(p.fullIon)return null;if(p.amorph)return t==='n'?p.Ed:p.Ea;const ms=t==='n'?p.meG:p.mhC,aB=p.er*0.0529e-7/ms,Nm=(0.26/aB)**3;if(N>=Nm)return null;const E0=t==='n'?p.Ed:p.Ea;return E0*(1-Math.cbrt(N/Nm))}
 const ST=(p,e)=>{if(p.mol){e=Math.max(-700,Math.min(700,e));const f=1/(1+Math.exp(-e));return [f,f*(1-f)]}return FD(e)};
 function rhoHalf(p,d,N,phi,EFn,EFp,q){
   const Ec=p.Ec-phi,Ev=p.Ev-phi;let n,dn;
@@ -2058,6 +2081,30 @@ function windowOf(S){
 }
 
 
+/* ---------- optical generation (1 sun, approximate AM1.5G, light enters at z = 0) ----------
+   Photon flux per 0.02 eV bin from the Shockley–Queisser short-circuit current J_SQ(E) (mA/cm² of photons above E).
+   Beer–Lambert in every layer, ideal front anti-reflection, specular back reflection off a metal (R = 0.95). */
+const SQJ=[[1.0,49.5],[1.12,43.8],[1.34,34.9],[1.42,31.8],[1.6,25.6],[1.7,22.6],[1.8,19.9],[2.0,14.9],[2.25,10.0],[2.5,6.6],[3.0,2.2],[3.5,0.45],[4.0,0.03],[4.4,0]];
+const jsq=E=>{if(E<=SQJ[0][0])return SQJ[0][1];for(let i=1;i<SQJ.length;i++)if(E<=SQJ[i][0]){const [a,ja]=SQJ[i-1],[b,jb]=SQJ[i];return ja+(jb-ja)*(E-a)/(b-a)}return 0};
+const BINS=(()=>{const o=[];for(let E=1.0;E<4.4-1e-9;E+=0.02)o.push([E+0.01,(jsq(E)-jsq(E+0.02))*1e-3/Q]);return o})();
+function alphaOf(p,E){const ab=p.ab||['d',1e5,p.Eg],[k,A,Eg]=ab;if(E<=Eg)return 0;const d=E-Eg;
+  return k==='d'?A*Math.sqrt(d):k==='t'?A*d*d/E:A*d*d+(E>3.3?1e6*Math.sqrt(E-3.3):0)}
+function genProfile(S){
+  if(S._gen)return S._gen;const ne=S.ne,E=S.E,Gel=new Float64Array(ne),abs=S.layers.map(()=>0);let refl=0,trans=0,inc=0;
+  const gen=e=>{const p=e.pa,F=FAMS[S.layers[e.li].f];return p.gen!=null?p.gen:!F.conductor&&!F.org};
+  for(const [Eph,phi0] of BINS){inc+=phi0;let I=phi0,stop=-1;
+    for(let e=0;e<ne;e++){const p=E[e].pa;if(p.mirror){stop=e;break}const a=alphaOf(p,Eph),h=E[e].h*1e-7,dI=I*(-Math.expm1(-a*h));
+      if(gen(E[e]))Gel[e]+=dI/h;abs[E[e].li]+=dI;I-=dI}
+    if(stop<0){trans+=I;continue}
+    I*=E[stop].pa.mirror;refl+=0;
+    for(let e=stop-1;e>=0;e--){const p=E[e].pa,a=alphaOf(p,Eph),h=E[e].h*1e-7,dI=I*(-Math.expm1(-a*h));if(gen(E[e]))Gel[e]+=dI/h;abs[E[e].li]+=dI;I-=dI}
+    refl+=I}
+  let Jg=0;for(let e=0;e<ne;e++)Jg+=Gel[e]*E[e].h*1e-7;
+  S._gen={Gel,Jgen:Jg*Q,abs:abs.map(x=>x*Q),refl:refl*Q,trans:trans*Q,inc:inc*Q,gen:S.layers.map((l,i)=>gen(E.find(e=>e.li===i)||E[0]))};return S._gen;
+}
+/* total recombination coefficient: R = B_eff·(np − nᵢ²), radiative/Langevin + Auger + mid-gap SRH (τn = τp = τ) */
+function Bef(p,n,pp){let b=p.Brad||0;if(p.Cau)b+=p.Cau*(n+pp);if(p.tau){const ni=Math.sqrt(p.Nc*p.Nv)*Math.exp(-p.Eg/(2*kT));b+=1/(p.tau*(n+pp+2*ni))}return b}
+
 /* ---------- Gummel drift–diffusion for organic (OLED) stacks ----------
    Slotboom variables w = e^{E_Fn/kT}, v = e^{−E_Fp/kT}; Scharfetter–Gummel fluxes with the band edge varying linearly
    across each element, so heterointerfaces need no special treatment. Langevin recombination γ = q(μn+μp)/ε. */
@@ -2066,10 +2113,11 @@ const mexp=(a,b)=>{const d=b-a;return Math.exp(Math.min(a,700))*(Math.abs(d)<1e-
 function gummel(S,phi,EFn,EFp,info,EL,ER,cfg){
   const nn=S.nn,E=S.E,L=S.layers,za=L[info.a].z0+ +L[info.a].t,zb=L[info.b].z0;
   let ia=0,ib=nn-1;for(let i=0;i<nn;i++){if(S.z[i]<=za+1e-9)ia=i;if(S.z[i]>=zb-1e-9){ib=i;break}}
-  if(oledWarm&&oledWarm.nn===nn&&oledWarm.key===cfg._key){for(let i=ia+1;i<ib;i++){EFn[i]=Math.min(Math.max(oledWarm.EFn[i]+(oledWarm.V-cfg.V)*0,Math.min(EL,ER)-0.5),Math.max(EL,ER)+0.5);EFp[i]=oledWarm.EFp[i]}}
+  if(oledWarm&&oledWarm.nn===nn&&oledWarm.key===cfg._key+(cfg.sun||0)){for(let i=ia+1;i<ib;i++){EFn[i]=Math.min(Math.max(oledWarm.EFn[i]+(oledWarm.V-cfg.V)*0,Math.min(EL,ER)-0.5),Math.max(EL,ER)+0.5);EFp[i]=oledWarm.EFp[i]}}
   const n=ib-ia-1;const lo=new Float64Array(n),di=new Float64Array(n),up=new Float64Array(n),rhs=new Float64Array(n),x=new Float64Array(n);
   const tri=()=>{for(let k=1;k<n;k++){const m=lo[k]/di[k-1];di[k]-=m*up[k-1];rhs[k]-=m*rhs[k-1]}x[n-1]=rhs[n-1]/di[n-1];for(let k=n-2;k>=0;k--)x[k]=(rhs[k]-up[k]*x[k+1])/di[k]};
-  let it=0,ok=false,res,lowP=0,lowN=0;const Kn=new Float64Array(nn),Kp=new Float64Array(nn);
+  let it=0,ok=false,res,lowP=0,lowN=0;const Kn=new Float64Array(nn),Kp=new Float64Array(nn),Gn_=new Float64Array(nn);
+  if(cfg.sun){const g=genProfile(S).Gel;for(let i=1;i<nn-1;i++)Gn_[i]=(g[i-1]*E[i-1].h+g[i]*E[i].h)*0.5e-7*cfg.sun}
   for(it=0;it<700;it++){
     res=poisson(S,phi,EFn,EFp,null);phi=res.phi;
     // molecular-statistics correction g = n_true/n_Boltzmann (single-level sites saturate at N0), lagged one iteration
@@ -2078,19 +2126,20 @@ function gummel(S,phi,EFn,EFp,info,EL,ER,cfg){
       const Gn=(gn(el.pa,e)+gn(el.pb,e+1))/2,Gp=(gp(el.pa,e)+gp(el.pb,e+1))/2;
       Kn[e]=Gn*Q*(el.pa.mun||1e-6)*kT*el.pa.Nc/(h*mexp(ea,eb));Kp[e]=Gp*Q*(el.pa.mup||1e-6)*kT*el.pa.Nv/(h*mexp(-va,-vb))}
     const half=(i,fn)=>{let s=0;for(const [e,pp] of [[E[i-1],'pb'],[E[i],'pa']]){const p=e[pp],ec=(p.Ec-phi[i])/kT,ev=(p.Ev-phi[i])/kT;s+=fn(p,ec,ev,gn(p,i),gp(p,i))*e.h*0.5e-7}return s};
+    const rc=i=>{let An=0,Ap=0,C=0;for(const [e,pp] of [[E[i-1],'pb'],[E[i],'pa']]){const p=e[pp],ec=(p.Ec-phi[i])/kT,ev=(p.Ev-phi[i])/kT,g1=gn(p,i),g2=gp(p,i),hh=e.h*0.5e-7;
+        const nN=p.Nc*g1*Math.exp(Math.min(EFn[i]/kT-ec,700)),pN=p.Nv*g2*Math.exp(Math.min(ev-EFp[i]/kT,700)),B=Bef(p,nN,pN);if(!(B>0))continue;
+        An+=B*p.Nc*Math.exp(Math.min(-ec,700))*g1*pN*hh;Ap+=B*p.Nv*Math.exp(Math.min(ev,700))*g2*nN*hh;C+=B*p.Nc*p.Nv*Math.exp(-p.Eg/kT)*hh}return {An,Ap,C}};
     const ifl=(e,i,j)=>{const f=-(phi[j]-phi[i])/(E[e].h*1e-7);return f>0?Math.sqrt(Q*f*100/(4*Math.PI*E[e].pa.er*8.8541878e-12)):0};
     const dP=ifl(ia,ia,ia+1),dN=ifl(ib-1,ib-1,ib);lowP=dP;lowN=dN;
     let maxd=0;
     // electrons
-    for(let k=0;k<n;k++){const i=ia+1+k;const A=half(i,(p,ec,ev,g1,g2)=>p.Brad*p.Nc*Math.exp(-ec)*g1*p.Nv*Math.exp(Math.min(ev-EFp[i]/kT,700))*g2);
-      const C=half(i,p=>p.Brad*p.Nc*p.Nv*Math.exp(-p.Eg/kT));
-      lo[k]=Kn[i-1];up[k]=Kn[i];di[k]=-(Kn[i-1]+Kn[i]+Q*A);rhs[k]=-Q*C}
+    for(let k=0;k<n;k++){const i=ia+1+k,c=rc(i);
+      lo[k]=Kn[i-1];up[k]=Kn[i];di[k]=-(Kn[i-1]+Kn[i]+Q*c.An);rhs[k]=-Q*(c.C+Gn_[i])}
     rhs[0]-=Kn[ia]*Math.exp(EL/kT);lo[0]=0;rhs[n-1]-=Kn[ib-1]*Math.exp((ER+dN)/kT);
     tri();for(let k=0;k<n;k++){const i=ia+1+k,nw=kT*Math.log(Math.max(x[k],1e-300)),d=Math.max(-0.2,Math.min(0.2,nw-EFn[i]))*(it>150?0.2:it>25?0.5:1);EFn[i]+=d;maxd=Math.max(maxd,Math.abs(d))}
     // holes
-    for(let k=0;k<n;k++){const i=ia+1+k;const A=half(i,(p,ec,ev,g1,g2)=>p.Brad*p.Nv*Math.exp(ev)*g2*p.Nc*Math.exp(Math.min(EFn[i]/kT-ec,700))*g1);
-      const C=half(i,p=>p.Brad*p.Nc*p.Nv*Math.exp(-p.Eg/kT));
-      lo[k]=Kp[i-1];up[k]=Kp[i];di[k]=-(Kp[i-1]+Kp[i]+Q*A);rhs[k]=-Q*C}
+    for(let k=0;k<n;k++){const i=ia+1+k,c=rc(i);
+      lo[k]=Kp[i-1];up[k]=Kp[i];di[k]=-(Kp[i-1]+Kp[i]+Q*c.Ap);rhs[k]=-Q*(c.C+Gn_[i])}
     rhs[0]-=Kp[ia]*Math.exp(-(EL-dP)/kT);lo[0]=0;rhs[n-1]-=Kp[ib-1]*Math.exp(-ER/kT);
     tri();for(let k=0;k<n;k++){const i=ia+1+k,nw=-kT*Math.log(Math.max(x[k],1e-300)),d=Math.max(-0.2,Math.min(0.2,nw-EFp[i]))*(it>150?0.2:it>25?0.5:1);EFp[i]+=d;maxd=Math.max(maxd,Math.abs(d))}
     if(maxd<2e-6&&res.ok){ok=true;break}
@@ -2099,7 +2148,7 @@ function gummel(S,phi,EFn,EFp,info,EL,ER,cfg){
   const wN=i=>Math.exp((i===ib?EFn[i]+lowN:EFn[i])/kT),vP=i=>Math.exp(-(i===ia?EFp[i]-lowP:EFp[i])/kT);
   const Jn=[],Jp=[];for(let e=ia;e<ib;e++){Jn.push(Kn[e]*(wN(e+1)-wN(e)));Jp.push(-Kp[e]*(vP(e+1)-vP(e)))}
   const mid=Math.floor(Jn.length/2),J=Jn[mid]+Jp[mid]; // conventional current, anode (left) → cathode
-  oledWarm={nn,key:cfg._key,EFn:Float64Array.from(EFn),EFp:Float64Array.from(EFp),V:cfg.V};
+  oledWarm={nn,key:cfg._key+(cfg.sun||0),EFn:Float64Array.from(EFn),EFp:Float64Array.from(EFp),V:cfg.V};
   return {phi,ok,it,J,Jn,Jp,ia,ib,lowP,lowN};
 }
 
@@ -2132,15 +2181,16 @@ function run(S,cfg,warm){
   }
   // densities
   const qd=win&&cfg.sp?{i0:win.i0,i1:win.i1,phiRef:phi,st:est}:null;
+  const gp_=cfg.sun&&info.mode==='oled'?genProfile(S):null;
   const nod=[];for(let i=0;i<nn;i++){const parts=[];
     for(const [e,p] of [[E[i-1],'pb'],[E[i],'pa']]){if(!e)continue;const q=qd&&i>qd.i0&&i<qd.i1?qDen(qd,i,phi[i],EFn[i]):null;
-      const r=rhoHalf(e[p],e.d,e.N,phi[i],EFn[i],EFp[i],q);parts.push({n:r[2],p:r[3],Nd:r[4],Na:r[5],R:(e[p].Brad||0)*r[2]*r[3]*(1-Math.exp(-(EFn[i]-EFp[i])/kT))})}
-    const av=k=>parts.reduce((s,o)=>s+o[k],0)/parts.length;nod.push({n:av('n'),p:av('p'),Nd:av('Nd'),Na:av('Na'),R:av('R')})}
+      const r=rhoHalf(e[p],e.d,e.N,phi[i],EFn[i],EFp[i],q);parts.push({n:r[2],p:r[3],Nd:r[4],Na:r[5],R:Bef(e[p],r[2],r[3])*r[2]*r[3]*(-Math.expm1(-(EFn[i]-EFp[i])/kT)),G:gp_?gp_.Gel[e===E[i]?i:i-1]*cfg.sun:0})}
+    const av=k=>parts.reduce((s,o)=>s+o[k],0)/parts.length;nod.push({n:av('n'),p:av('p'),Nd:av('Nd'),Na:av('Na'),R:av('R'),G:av('G')})}
   for(const s of est){const a=(EFn[Math.round((win.i0+win.i1)/2)]-s.E)/kT;s.ns=s.N2D*kT*(a>40?a:Math.log1p(Math.exp(a)))}
   let nsW=0,psW=0;if(win)for(let i=win.i0;i<win.i1;i++){const h=(S.z[i+1]-S.z[i])*1e-7;nsW+=(nod[i].n+nod[i+1].n)/2*h;psW+=(nod[i].p+nod[i+1].p)/2*h}
   let twin=win;
   if(info.mode==='unipolar'){const L=S.layers,za=L[info.a].z0+ +L[info.a].t,zb=L[info.b].z0;let i0=0,i1=nn-1;for(let i=0;i<nn;i++){if(S.z[i]<=za+1e-9)i0=i;if(S.z[i]>=zb-1e-9){i1=i;break}}twin={i0,i1,za,zb}}
-  return {S,phi,EFn,EFp,EL,ER,V,info,win,twin,est,hst,nod,nsW,psW,ok:res.ok,spOk,outer,cfg,dd};
+  return {S,phi,EFn,EFp,EL,ER,V,info,win,twin,est,hst,nod,nsW,psW,ok:res.ok,spOk,outer,cfg,dd,gen:gp_};
 }
 
 /* ---------- transmission (transfer matrix on Γ band, adaptive around resonances) ---------- */
@@ -2190,7 +2240,7 @@ function tsuEsaki(R,tr){ // A/cm², electrons, positive when net flow is right�
     const fR=(R.ER-E)/kT,fL=(R.EL-E)/kT,ln=x=>x>40?x:Math.log1p(Math.exp(x));s+=t*(ln(fR)-ln(fL))*dE}
   return pref*s;
 }
-return {FAMS,build,run,transmission,tsuEsaki,biasInfo,windowOf,schr,sub,fx,compAt};
+return {FAMS,build,run,genProfile,transmission,tsuEsaki,biasInfo,windowOf,schr,sub,fx,compAt};
 })();
 
 </script>
@@ -2232,11 +2282,17 @@ const HP=[
  {name:'Multilayer phosphorescent OLED',cat:'Organic LED',contact:'ohmic',V:4,vb:[-1,7],fig5:'rec',
   layers:[Ly('ITOt',0,100,'n',5e20,0),Ly('PEDOT',0,40,'p',3e20,0),Ly('NPB',0,30,'i',0,0),Ly('CBP',0,30,'i',0,0),Ly('TPBi',0,40,'i',0,0),Ly('LiFAl',0,20,'n',1e22,0)],view:[120,262],
   about:'Each layer has one job. PEDOT:PSS (φ ≈ 5.1 eV) cuts the hole-injection barrier into NPB to ≈0.3 eV. NPB carries holes, and the CBP:Ir(ppy)₃ emissive layer hosts recombination. TPBi carries electrons, and its deep HOMO (6.2 eV) stops holes leaking through to the cathode. LiF/Al lowers the cathode work function. The result is balanced injection: recombination efficiency is near 1 in Fig. 5, and the current is about 10–20 mA/cm² at 4 V. The emissive layer is modeled with its CBP host levels; the trap states of the Ir(ppy)₃ dopant are not included.'},
+ {name:'Silicon heterojunction (HIT) solar cell',cat:'Solar cell',contact:'ohmic',V:0,vb:[-0.2,0.8],fig5:'JVs',sun:true,
+  layers:[Ly('ITOo',0,80,'n',5e20,0),Ly('aSi',0,10,'p',1e19,0),Ly('aSi',0,5,'i',0,0),Ly('cSi',0,150000,'n',1e16,0),Ly('aSi',0,5,'i',0,0),Ly('aSi',0,10,'n',1e19,0),Ly('ITOo',0,80,'n',5e20,0),Ly('Ag',0,200,'n',1e22,0)],view:[50,600],
+  about:'A silicon heterojunction cell of the HIT type. A 150 µm n-type c-Si wafer absorbs the light, and thin a-Si:H films on both faces form the contacts. Against c-Si, a-Si:H (E_g ≈ 1.72 eV) gives ΔE_V ≈ 0.45 eV and ΔE_C ≈ 0.15 eV. The p-a-Si:H front film inverts the wafer surface: holes pile up just under the interface (Fig. 3), and that buried p–n junction separates the carriers. Holes leave through the front and electrons through the n-a-Si:H rear (switch to Whole stack to see it). A 5 nm undoped a-Si:H buffer keeps the defect-rich doped films off the wafer, which is why these cells reach V_oc ≈ 0.73–0.75 V. Light enters through the ITO at the left, and Fig. 5 sweeps the illuminated J–V. Both ITO layers are treated as ohmic tunnel contacts (flat band). Interface defect states, surface texturing and front reflection are not modeled. Texturing would raise J_sc and interface defects would lower V_oc, so the ≈25 % result is close to, not a prediction of, record cells (≈26–27 %).'},
+ {name:'Perovskite p-i-n solar cell · ITO/PTAA/MAPbI₃/C₆₀',cat:'Solar cell',contact:'ohmic',V:0,vb:[-0.2,1.3],fig5:'JVs',sun:true,
+  layers:[Ly('ITOt',0,100,'n',5e20,0),Ly('PTAA',0,20,'i',0,0),Ly('MAPI',0,500,'i',0,0),Ly('C60',0,30,'i',0,0),Ly('BCPAg',0,100,'n',1e22,0)],view:[60,690],
+  about:'An inverted (p-i-n) perovskite cell. Light enters through the ITO and is absorbed in 500 nm of undoped MAPbI₃ (E_g = 1.55 eV, α ≈ 10⁵ cm⁻¹). The work-function difference between the treated ITO (4.7 eV) and BCP/Ag (3.9 eV) drops across the undoped stack and sweeps the carriers out. Much of it falls in the thin PTAA and C₆₀ layers, because their permittivity (ε ≈ 3–4) is far below that of MAPbI₃ (ε ≈ 24). PTAA passes holes (HOMO 5.2 eV) and blocks electrons (LUMO 2.3 eV). C₆₀ passes electrons (LUMO 3.9 eV) and blocks holes (HOMO 6.2 eV). A long carrier lifetime (1 µs here) plus those selective layers gives V_oc ≈ 1.15 V, close to the radiative limit for this gap. Mobile ions, hysteresis, interface traps and reflection losses are not modeled. J_sc is therefore the ideal anti-reflection value, and the ≈25 % efficiency is an upper bound above the real MAPbI₃ record.'},
  {name:'AlAs/GaAs resonant tunneling diode',cat:'Resonant tunneling',contact:'ohmic',V:0,vb:[-0.6,0.6],fig5:'JV',
   layers:[Ly('AlGaAs',0,60,'n',2e18,0),Ly('AlGaAs',0,5,'i',0,0),Ly('AlGaAs',1,1.7,'i',0,1),Ly('AlGaAs',0,4.5,'i',0,1),Ly('AlGaAs',1,1.7,'i',0,1),Ly('AlGaAs',0,5,'i',0,0),Ly('AlGaAs',0,60,'n',2e18,0)],view:[45,93],
   about:'Two 1.7 nm AlAs barriers (Γ barrier ≈ 1 eV) around a 4.5 nm GaAs well make a Fabry–Pérot resonator for electrons. Transmission is near 1 only at the quasi-bound level. Current flows while that level sits in the emitter’s occupied energy range and collapses once bias pulls it below the emitter conduction-band edge, which gives the negative differential resistance in Fig. 5. Coherent transport is assumed, so the real valley current is higher.'}
 ];
-const HSt={pi:0,layers:null,contact:'gate',phiB:0.8,VG:0,V:0,sp:true,psi:true,holes:true,view:'active',abr:false,gam:true,fig5:null,edited:false};
+const HSt={pi:0,layers:null,contact:'gate',phiB:0.8,VG:0,V:0,sp:true,psi:true,holes:true,view:'active',abr:false,gam:true,fig5:null,edited:false,sun:false};
 let warmPhi=null,warmKey=null,sweepTok=0,sweep={key:null,data:null};
 const clone=o=>JSON.parse(JSON.stringify(o));
 
@@ -2248,7 +2304,7 @@ function drawTable(){
     <td><select data-k="f" aria-label="Layer ${i+1} material">${famOpts(l.f)}</select></td>
     <td><input data-k="x" type="number" min="0" max="${FAMS[l.f].x[1]}" step="0.01" value="${FAMS[l.f].fixed?'':l.x}" ${FAMS[l.f].fixed?'disabled placeholder="—"':''} aria-label="Layer ${i+1} composition"></td>
     <td><input data-k="x2" type="number" min="0" max="${FAMS[l.f].x[1]}" step="0.01" value="${FAMS[l.f].fixed?'':l.x2}" placeholder="—" ${FAMS[l.f].fixed?'disabled':''} aria-label="Layer ${i+1} end composition"></td>
-    <td><input data-k="t" type="number" min="0.5" max="3000" step="0.1" value="${l.t}" aria-label="Layer ${i+1} thickness"></td>
+    <td><input data-k="t" type="number" min="0.5" max="300000" step="0.1" value="${l.t}" aria-label="Layer ${i+1} thickness"></td>
     <td><select data-k="d" aria-label="Layer ${i+1} doping"><option value="i" ${l.d==='i'?'selected':''}>undoped</option><option value="n" ${l.d==='n'?'selected':''}>n</option><option value="p" ${l.d==='p'?'selected':''}>p</option></select></td>
     <td><input data-k="N" type="text" inputmode="decimal" value="${l.d==='i'?'':(+l.N).toExponential(1).replace('e+','e')}" ${l.d==='i'?'disabled':''} aria-label="Layer ${i+1} doping concentration"></td>
     <td class="ck"><input data-k="q" type="checkbox" ${l.q?'checked':''} aria-label="Layer ${i+1} in quantum region"></td>
@@ -2261,11 +2317,11 @@ let tdeb=null;
 function onTable(e){
   const tr=e.target.closest('tr');if(!tr)return;const i=+tr.dataset.i,k=e.target.dataset.k;if(!k)return;const l=HSt.layers[i];
   let v=e.target.type==='checkbox'?e.target.checked:e.target.value;
-  if(k==='x'||k==='t'){v=+v;if(!isFinite(v))return;if(k==='x')v=Math.min(Math.max(v,0),FAMS[l.f].x[1]);if(k==='t')v=Math.min(Math.max(v,0.5),3000)}
+  if(k==='x'||k==='t'){v=+v;if(!isFinite(v))return;if(k==='x')v=Math.min(Math.max(v,0),FAMS[l.f].x[1]);if(k==='t')v=Math.min(Math.max(v,0.5),300000)}
   if(k==='x2'){v=v===''?'':Math.min(Math.max(+v,0),FAMS[l.f].x[1])}
   if(k==='N'){v=parseFloat(v);if(!(v>0))return;v=Math.min(Math.max(v,1e13),1e23)}
   l[k]=v;if(k==='f'){const F=FAMS[v];l.x=Math.min(+l.x,F.x[1]);if(l.x2!=='')l.x2=Math.min(+l.x2,F.x[1]);if(F.fixed){l.x=0;l.x2=''}
-    if(F.metal){l.d='n';l.N=1e22}else if(v==='ITO'||v==='ITOt'){l.d='n';l.N=5e20}else if(v==='PEDOT'){l.d='p';l.N=3e20}else if(F.org){l.d='i';l.N=0}}
+    if(F.metal){l.d='n';l.N=1e22}else if(F.defD){l.d=F.defD;l.N=F.defN}else if(v==='ITO'||v==='ITOt'||v==='ITOo'){l.d='n';l.N=5e20}else if(v==='PEDOT'){l.d='p';l.N=3e20}else if(F.org){l.d='i';l.N=0}}
   if(k==='d'&&v!=='i'&&!(+l.N>0))l.N=1e17;
   HSt.edited=true;
   if(k==='f'||k==='d'||k==='q')drawTable();else{const c=tr.querySelector('.lbl');if(c)c.textContent=layerLabel(l)}
@@ -2273,10 +2329,10 @@ function onTable(e){
 }
 
 /* ---------- solve ---------- */
-const cfgOf=()=>({contact:HSt.contact,phiB:HSt.phiB,VG:HSt.VG,V:HSt.V,sp:HSt.sp,nst:8,tol:1e-4,_key:JSON.stringify([HSt.layers.map(({z0,...r})=>r),HSt.contact])});
-const keyOf=(extra)=>JSON.stringify([HSt.layers,HSt.contact,HSt.phiB,HSt.sp,extra||0]);
+const cfgOf=()=>({contact:HSt.contact,phiB:HSt.phiB,VG:HSt.VG,V:HSt.V,sp:HSt.sp,nst:8,tol:1e-4,sun:HSt.sun?1:0,_key:JSON.stringify([HSt.layers.map(({z0,...r})=>r),HSt.contact])});
+const keyOf=(extra)=>JSON.stringify([HSt.layers,HSt.contact,HSt.phiB,HSt.sp,HSt.sun,extra||0]);
 function solveNow(){
-  const S=build(clone(HSt.layers));const k=JSON.stringify([HSt.layers,HSt.contact]);
+  const S=build(clone(HSt.layers));const k=JSON.stringify([HSt.layers,HSt.contact,HSt.sun]);
   const R=run(S,cfgOf(),warmKey===k?warmPhi:null);warmPhi=R.phi;warmKey=k;return R;
 }
 function abruptVariant(){
@@ -2291,7 +2347,7 @@ function viewRange(R){
   if(R.win){const pad=Math.max(10,0.2*(R.win.zb-R.win.za));return [Math.max(0,R.win.za-pad),Math.min(len,R.win.zb+pad)]}
   return [0,len];
 }
-const famColor=f=>({AlGaAs:'lyA',InGaAs:'lyB',AlGaN:'lyC',InGaN:'lyD',ITO:'lyF',ITOt:'lyF'}[f]||(FAMS[f].metal?'lyG':'lyE'));
+const famColor=f=>({AlGaAs:'lyA',InGaAs:'lyB',AlGaN:'lyC',InGaN:'lyD',ITO:'lyF',ITOt:'lyF',ITOo:'lyF',cSi:'lyA',aSi:'lyB',MAPI:'lyD'}[f]||(FAMS[f].metal?'lyG':'lyE'));
 const isMetalEl=(S,e)=>!!FAMS[S.layers[S.E[e].li].f].metal;
 const isMetalNode=(S,i)=>(i===0||isMetalEl(S,i-1))&&(i===S.ne||isMetalEl(S,i));
 function shadeLayers(R,xs,top,bot,v0,v1,labels){
@@ -2366,7 +2422,7 @@ function hdrawBands(R,Rab){
   if(HSt.gam&&seg.some(s=>!s.metal&&Math.abs(s.eg[0]-s.ec[0])>1e-3)){o+=`<path d="${pth('eg')}" class="gam"/>`}
   // quasi-Fermi levels
   const ef=(arr,cls)=>{const pts=[];for(let i=0;i<S.nn;i++){const z=S.z[i];if(z<v0||z>v1)continue;pts.push(`${r1(xs(z))},${r1(y(arr[i]))}`)}return `<path d="M${pts.join('L')}" class="${cls}"/>`};
-  const split=(R.info.mode==='bipolar'||R.info.mode==='oled')&&Math.abs(R.V)>1e-6;
+  const split=(R.info.mode==='bipolar'||R.info.mode==='oled')&&(Math.abs(R.V)>1e-6||(R.cfg.sun&&R.info.mode==='oled'));
   if(split){o+=ef(R.EFn,'ef')+ef(R.EFp,'efp')}else o+=ef(R.EFn,'ef');
   // states
   const w=R.win;const EFm=R.EFn[Math.round(((w||{i0:0}).i0+(w||{i1:0}).i1)/2)]||0;
@@ -2463,8 +2519,44 @@ function hdrawJVo(data,cur){
   return svg(W,H,o,'OLED current density and recombination current versus bias');
 }
 
+function hdrawGen(R){
+  const W=900,H=320,top=40,bot=H-44,px0=84,px1=884,[v0,v1]=[R.v0,R.v1],S=R.S,xs=z=>px0+(z-v0)/(v1-v0)*(px1-px0);
+  let mx=0;for(let i=0;i<S.nn;i++){const z=S.z[i];if(z<v0||z>v1)continue;mx=Math.max(mx,R.nod[i].G,R.nod[i].R)}
+  let o=shadeLayers(R,xs,top,bot,v0,v1,true);if(!(mx>0))return svg(W,H,o+T((px0+px1)/2,(top+bot)/2,'No generation in view','mut','middle'),'Generation profile');
+  const hiE=Math.ceil(Math.log10(mx)+0.2),loE=hiE-8,y=v=>{const l=Math.log10(Math.max(v,10**(loE-1)));return bot-(l-loE)/(hiE-loE)*(bot-top)};
+  for(let e=loE;e<=hiE;e+=2){const Y=y(10**e);o+=L(px0,Y,px1,Y,'gr')+T(px0-6,Y+4,`10${sup(e)}`,'m mut','end')}
+  o+=`<text transform="translate(18 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">rate (cm⁻³ s⁻¹)</text>`;
+  const pl=(k,c)=>{let d='',pen=false;for(let i=0;i<S.nn;i++){const z=S.z[i];if(z<v0||z>v1)continue;const v=R.nod[i][k];if(isMetalNode(S,i)||!(v>10**(loE-1))){pen=false;continue}d+=(pen?'L':'M')+`${r1(xs(z))},${r1(Math.min(bot,y(v)))}`;pen=true}return `<path d="${d}" class="${c}"/>`};
+  o+=pl('G','ivp')+pl('R','iv');
+  o+=L(px0,bot,px1,bot,'ax')+L(px0,top,px0,bot,'ax');
+  for(const t of ticks(v0,v1,7)){const X=xs(t);o+=L(X,bot,X,bot+4,'ax')+T(X,bot+17,(+t.toPrecision(4)),'m mut','middle')}
+  o+=T(px1,bot+34,'depth z (nm) →','mut','end');
+  let lx=px0,ly=16;for(const [c,t] of [['ivp','photogeneration G (1 sun)'],['iv','net recombination R']]){o+=L(lx,ly,lx+26,ly,c)+T(lx+32,ly+4,t,'mut');lx+=32+t.length*6.6+28}
+  return svg(W,H,o,'Photogeneration and recombination rate versus depth');
+}
+function pvMetrics(d){if(!d||d.length<3)return null;const J=v=>{for(let i=1;i<d.length;i++)if(d[i][0]>=v){const [a,ja]=d[i-1],[b,jb]=d[i];return ja+(jb-ja)*(v-a)/(b-a)}return d[d.length-1][1]};
+  const Jsc=-J(0);let Voc=null;for(let i=1;i<d.length;i++)if(d[i-1][1]<0&&d[i][1]>=0){const [a,ja]=d[i-1],[b,jb]=d[i];Voc=a-ja*(b-a)/(jb-ja);break}
+  let Pm=0,Vm=0;for(let i=0;i<d.length-1;i++)for(let k=0;k<=10;k++){const v=d[i][0]+(d[i+1][0]-d[i][0])*k/10,P=-v*J(v);if(P>Pm){Pm=P;Vm=v}}
+  return {Jsc,Voc,Pm,Vm,Jm:-J(Vm),FF:Voc&&Jsc>0?Pm/(Voc*Jsc):null,PCE:Pm/0.1*100}}
+function hdrawJVs(data,cur){
+  const W=900,H=320,top=40,bot=H-44,px0=84,px1=884;if(!data||data.length<2)return `<p class="hint" style="padding:12px">Computing…</p>`;
+  const x0=data[0][0],x1=data[data.length-1][0],xs=v=>px0+(v-x0)/(x1-x0)*(px1-px0);const m=pvMetrics(data);
+  const jsc=Math.max(m?m.Jsc:0,1e-6)*1e3,lo=-jsc*1.15,hi=jsc*0.6,y=v=>bot-(v-lo)/(hi-lo)*(bot-top);
+  let o='';for(const t of ticks(lo,hi,6)){const Y=y(t);o+=L(px0,Y,px1,Y,'gr')+T(px0-6,Y+4,(+t.toPrecision(3)).toString().replace('-','−'),'m mut','end')}
+  for(const t of ticks(x0,x1,8)){const X=xs(t);o+=L(X,top,X,bot,'gr')+T(X,bot+17,(+t.toFixed(2)).toString().replace('-','−'),'m mut','middle')}
+  o+=L(px0,bot,px1,bot,'ax')+L(px0,top,px0,bot,'ax')+L(px0,y(0),px1,y(0),'ax')+(x0<0?L(xs(0),top,xs(0),bot,'ax'):'');
+  o+=`<text transform="translate(18 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">J (mA/cm²) · P (mW/cm²)</text>`+T(px1,bot+34,'bias V, left contact + (volts) →','mut','end');
+  if(m&&m.Pm>0){const X0=xs(0),X1=xs(m.Vm),Y1=y(-m.Jm*1e3);o+=`<rect x="${r1(Math.min(X0,X1))}" y="${r1(y(0))}" width="${r1(Math.abs(X1-X0))}" height="${r1(Y1-y(0))}" class="mpp"/>`+T(X1+6,Y1+14,'max power','m mut halo')}
+  const clip=v=>Math.max(lo,Math.min(hi,v));
+  o+=`<path d="M${data.map(p=>`${r1(xs(p[0]))},${r1(y(clip(p[1]*1e3)))}`).join('L')}" class="iv"/>`;
+  o+=`<path d="M${data.filter(p=>p[1]<=0||p[0]<=0).map(p=>`${r1(xs(p[0]))},${r1(y(clip(p[0]*p[1]*1e3)))}`).join('L')}" class="ivn"/>`;
+  if(cur&&cur[0]>=x0&&cur[0]<=x1)o+=`<circle cx="${r1(xs(cur[0]))}" cy="${r1(y(clip(cur[1]*1e3)))}" r="5" class="ivdot"/>`;
+  let lx=px0,ly=16;for(const [c,t] of [['iv','current density J'],['ivn','power density J·V (negative = delivered)']]){o+=L(lx,ly,lx+26,ly,c)+T(lx+32,ly+4,t,'mut');lx+=32+t.length*6.6+28}
+  return svg(W,H,o,'Illuminated current density and power versus bias');
+}
+
 /* ---------- Fig 5 ---------- */
-function f5modes(R){const m=[];if(R.info.mode==='oled'){m.push(['rec','Recombination profile']);m.push(['JVo','J–V and charge balance'])}else if(R.info.mode==='bipolar')m.push(['rec','Recombination profile']);if(R.cfg.contact==='gate'&&R.win)m.push(['ns','n_s vs gate']);if(R.win)m.push(['opt','Optical transitions']);if(R.win&&R.cfg.contact!=='gate')m.push(['T','Transmission T(E)']);if(R.win&&R.info.mode==='unipolar')m.push(['JV','Tunneling I–V']);return m}
+function f5modes(R){const m=[];if(R.info.mode==='oled'&&R.cfg.sun){m.push(['JVs','Illuminated J–V']);m.push(['gen','Generation and recombination'])}else if(R.info.mode==='oled'){m.push(['rec','Recombination profile']);m.push(['JVo','J–V and charge balance'])}else if(R.info.mode==='bipolar')m.push(['rec','Recombination profile']);if(R.cfg.contact==='gate'&&R.win)m.push(['ns','n_s vs gate']);if(R.win)m.push(['opt','Optical transitions']);if(R.win&&R.cfg.contact!=='gate')m.push(['T','Transmission T(E)']);if(R.win&&R.info.mode==='unipolar')m.push(['JV','Tunneling I–V']);return m}
 function hdrawOpt(R){
   const W=900,H=320,S=R.S,w=R.win;const top=40,bot=H-44;
   const pairs=[];for(let i=0;i<Math.min(R.est.length,3);i++)for(let j=0;j<Math.min(R.hst.length,3);j++){let ov=0;for(let k=w.i0;k<=w.i1;k++){const h=((S.z[k+1]||S.z[k])-(S.z[k-1]||S.z[k]))/2;ov+=R.est[i].psi[k]*R.hst[j].psi[k]*h}
@@ -2530,11 +2622,13 @@ function runSweep(kind,R){
   const p=HP[HSt.pi];let xs=[];
   if(kind==='ns'){const [a,b]=p.vg&&!HSt.edited?p.vg:[$('hVG').min,$('hVG').max].map(Number);for(let i=0;i<=24;i++)xs.push(a+(b-a)*i/24)}
   else if(kind==='JVo'){const vmax=+$('hV').max;for(let i=0;i<=28;i++)xs.push(vmax*i/28)}
+  else if(kind==='JVs'){const vmax=+$('hV').max;for(let i=0;i<=40;i++)xs.push(vmax*i/40)}
   else{const vmax=+$('hV').max;for(let i=0;i<=40;i++)xs.push(vmax*i/40)}
   const S=build(clone(HSt.layers));let warm=null,i=0;
   const step=()=>{if(tok!==sweepTok)return;const t0=performance.now();
     while(i<xs.length&&performance.now()-t0<30){const v=xs[i];
       if(kind==='ns'){const r=run(S,{...cfgOf(),VG:v,maxOuter:60,tol:1.5e-4},warm);warm=r.phi;sweep.data.push([v,r.nsW])}
+      else if(kind==='JVs'){const r=run(S,{...cfgOf(),V:v,sp:false},warm);warm=r.phi;sweep.data.push([v,r.dd?r.dd.J:0])}
       else if(kind==='JVo'){const r=run(S,{...cfgOf(),V:v,sp:false},warm);warm=r.phi;sweep.data.push([v,Math.max(r.dd?r.dd.J:0,0),recInt(r).tot*Q])}
       else{const r=run(S,{...cfgOf(),V:v,sp:false},warm);warm=r.phi;const tr=transmission(r,null,Math.max(r.EL,r.ER)+0.35,900);sweep.data.push([v,tsuEsaki(r,tr)])}
       i++}
@@ -2544,6 +2638,8 @@ function runSweep(kind,R){
 }
 let lastR=null;
 function drawF5Sweep(){const R=lastR;if(!R)return;const k=HSt.fig5;
+  if(k==='JVs'){const d=sweep.kind===k?sweep.data:null;$('hf5').innerHTML=hdrawJVs(d,[HSt.V,R.dd?R.dd.J:0]);
+    if(sweep.done&&d){const m=pvMetrics(d),g=R.gen;$('hf5kv').innerHTML=kvs([['Short-circuit J_sc',`${(m.Jsc*1e3).toFixed(2)} mA/cm²`],['Open-circuit V_oc',m.Voc!=null?`${m.Voc.toFixed(3)} V`:'beyond range'],['Fill factor',m.FF!=null?m.FF.toFixed(3):'—'],['Efficiency (100 mW/cm²)',`${m.PCE.toFixed(1)} %`],['Max power point',`${m.Vm.toFixed(3)} V · ${(m.Jm*1e3).toFixed(2)} mA/cm²`],['Photogeneration limit q∫G dz',g?`${(g.Jgen*1e3).toFixed(2)} mA/cm²`:'—']])}return}
   if(k==='JVo'){const d=sweep.kind===k?sweep.data:null;$('hf5').innerHTML=hdrawJVo(d,[HSt.V,R.dd?R.dd.J:0]);
     if(sweep.done&&d){const on=d.find(p=>p[1]>=1e-3);const at=d.reduce((a,p)=>Math.abs(p[0]-HSt.V)<Math.abs(a[0]-HSt.V)?p:a,d[0]);$('hf5kv').innerHTML=kvs([['Turn-on (J = 1 mA/cm²)',on?`${f2(on[0])} V`:'beyond range'],['J at the current bias',`${sci(R.dd?R.dd.J:0)} A/cm²`],['Recombination efficiency',R.dd&&R.dd.J>1e-12?(recInt(R).tot*Q/R.dd.J).toFixed(3):'—']])}return}
   const cur=k==='ns'?[HSt.VG,R.nsW]:[HSt.V,R._J];
@@ -2557,7 +2653,7 @@ const kvs=items=>items.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).joi
 /* ---------- readouts ---------- */
 function hreadouts(R){
   const p=HP[HSt.pi],S=R.S;
-  const cat=R.cfg.contact==='gate'?'2DEG channel':R.info.mode==='oled'?'Organic LED (drift–diffusion)':R.info.mode==='bipolar'?'Bipolar heterostructure':R.info.mode==='unipolar'?'Unipolar tunneling structure':R.win?'Quantum-confined structure':'Heterostructure';
+  const org=HSt.layers.some(l=>FAMS[l.f].org);const cat=R.cfg.contact==='gate'?'2DEG channel':R.info.mode==='oled'?(R.cfg.sun?'Solar cell (drift–diffusion)':org?'Organic LED (drift–diffusion)':'Two-contact device (drift–diffusion)'):R.info.mode==='bipolar'?'Bipolar heterostructure':R.info.mode==='unipolar'?'Unipolar tunneling structure':R.win?'Quantum-confined structure':'Heterostructure';
   $('hpill').className='pill '+(R.cfg.contact==='gate'?'ohmic':R.info.mode==='bipolar'||R.info.mode==='oled'?'schottky':R.info.mode==='unipolar'?'tunnel':'flat');$('hpill').textContent=HSt.edited?cat:p.cat;
   $('hsub').textContent=`${HSt.edited?'Edited: ':''}${p.name} · ${HSt.layers.length} layers, ${S.len.toFixed(1)} nm`;
   const w=[];if(!R.ok)w.push(R.info.mode==='oled'?'Drift–diffusion did not fully converge at this bias':'Poisson did not fully converge');if(R.win&&R.cfg.sp&&!R.spOk)w.push('Schrödinger–Poisson stopped before full convergence');
@@ -2568,11 +2664,13 @@ function hreadouts(R){
   const items=[];
   if(R.cfg.contact==='gate')items.push(['Gate V_G · qφ_B',`${f2(R.cfg.VG)} V · ${R.cfg.phiB.toFixed(2)} eV`]);
   if(R.info.mode==='bipolar'||R.info.mode==='unipolar')items.push(['Bias V · E_Fn − E_Fp',`${f2(R.V)} V · ${(Math.max(...R.EFn)-Math.min(...R.EFp)).toFixed(2)} eV`]);
-  if(R.info.mode==='oled'&&R.dd){const rec=recInt(R);items.push(['Bias V · current density J',`${f2(R.V)} V · ${sci(R.dd.J)} A/cm²`]);items.push(['Recombination efficiency q∫R dz / J',R.dd.J>1e-12?(rec.tot*Q/R.dd.J).toFixed(3):'—']);
+  if(R.info.mode==='oled'&&R.dd){const rec=recInt(R);items.push(['Bias V · current density J',R.cfg.sun?`${f2(R.V)} V · ${(R.dd.J*1e3).toFixed(2)} mA/cm²`:`${f2(R.V)} V · ${sci(R.dd.J)} A/cm²`]);
+    if(R.cfg.sun&&R.gen){items.push(['Photocurrent available q∫G dz',`${(R.gen.Jgen*1e3).toFixed(2)} mA/cm²`]);items.push(['Recombination q∫R dz',`${(rec.tot*Q*1e3).toFixed(2)} mA/cm²`])}
+    else items.push(['Recombination efficiency q∫R dz / J',R.dd.J>1e-12?(rec.tot*Q/R.dd.J).toFixed(3):'—']);
     const L=HSt.layers,a=R.info.a,b=R.info.b,pa=FAMS[L[a+1].f].prop(0),pb=FAMS[L[b-1].f].prop(0),an=FAMS[L[a].f].prop(0),ca=FAMS[L[b].f].prop(0);
-    const wfA=-(R.phi[R.dd.ia]+R.EL)-0,wfC=-(R.phi[R.dd.ib]+R.ER);items.push(['Anode / cathode work function',`${wfA.toFixed(2)} / ${wfC.toFixed(2)} eV`]);
-    items.push(['Hole barrier (anode → HOMO)',`${(-pa.Ev-wfA).toFixed(2)} eV${R.dd.lowP>0.005?` (−${(R.dd.lowP*1000).toFixed(0)} meV image force)`:''}`]);
-    items.push(['Electron barrier (cathode → LUMO)',`${(wfC+pb.Ec).toFixed(2)} eV${R.dd.lowN>0.005?` (−${(R.dd.lowN*1000).toFixed(0)} meV image force)`:''}`]);}
+    const wfA=-(R.phi[R.dd.ia]+R.EL)-0,wfC=-(R.phi[R.dd.ib]+R.ER);items.push([R.cfg.sun?'Left / right contact work function':'Anode / cathode work function',`${wfA.toFixed(2)} / ${wfC.toFixed(2)} eV`]);
+    items.push([org?'Hole barrier (anode → HOMO)':'Hole barrier (left contact → E_V)',`${(-pa.Ev-wfA).toFixed(2)} eV${R.dd.lowP>0.005?` (−${(R.dd.lowP*1000).toFixed(0)} meV image force)`:''}`]);
+    items.push([org?'Electron barrier (cathode → LUMO)':'Electron barrier (right contact → E_C)',`${(wfC+pb.Ec).toFixed(2)} eV${R.dd.lowN>0.005?` (−${(R.dd.lowN*1000).toFixed(0)} meV image force)`:''}`]);}
   if(R.win){items.push(['Electrons in quantum region',`${sci(R.nsW)} cm⁻²`]);
     R.est.slice(0,3).forEach((s,i)=>items.push([`e${i+1} − E_F · n_${i+1}`,`${(s.E-R.EFn[Math.round((R.win.i0+R.win.i1)/2)]).toFixed(3)} eV · ${sci(s.ns)} cm⁻²`]));
     if(R.hst[0]&&R.est[0]){const E=R.est[0].E-R.hst[0].E;items.push(['e1–hh1 transition',`${E.toFixed(3)} eV · ${(1239.84/E).toFixed(0)} nm`])}}
@@ -2595,7 +2693,8 @@ function syncControls(){
   const p=HP[HSt.pi];const vg=p.vg||[-3,1];$('hVG').min=vg[0];$('hVG').max=vg[1];$('hVG').value=HSt.VG;$('hVGO').textContent=(HSt.VG>=0?'+':'−')+Math.abs(HSt.VG).toFixed(2)+' V';
   const info=biasInfo(HSt.layers,HSt.contact);const canB=!gate&&(info.mode==='bipolar'||info.mode==='unipolar'||info.mode==='oled');$('hVc').hidden=!canB;
   const vb=p.vb||[-1,1];$('hV').min=vb[0];$('hV').max=vb[1];if(!canB)HSt.V=0;HSt.V=Math.min(Math.max(HSt.V,vb[0]),vb[1]);$('hV').value=HSt.V;$('hVO').textContent=(HSt.V>=0?'+':'−')+Math.abs(HSt.V).toFixed(2)+' V';
-  $('hVhint').textContent=info.mode==='oled'?'Positive V makes the anode (left) positive: forward bias. Solved by drift–diffusion.':info.mode==='bipolar'?(info.lt==='p'?'Positive V forward-biases this p-on-top junction.':'Negative V forward-biases this n-on-top junction.'):'Electrons tunnel from the higher Fermi level to the lower one.';
+  $('hSunc').hidden=info.mode!=='oled';$('hSun').checked=HSt.sun;
+  $('hVhint').textContent=info.mode==='oled'&&HSt.sun?'Positive V forward-biases the cell. Under light J < 0 between 0 and V_oc: the cell delivers power.':info.mode==='oled'?'Positive V makes the anode (left) positive: forward bias. Solved by drift–diffusion.':info.mode==='bipolar'?(info.lt==='p'?'Positive V forward-biases this p-on-top junction.':'Negative V forward-biases this n-on-top junction.'):'Electrons tunnel from the higher Fermi level to the lower one.';
   $('hSP').checked=HSt.sp;$('hPsi').checked=HSt.psi;$('hHoles').checked=HSt.holes;$('hGam').checked=HSt.gam;
   $('hViewA').setAttribute('aria-pressed',HSt.view==='active');$('hViewF').setAttribute('aria-pressed',HSt.view==='full');
   const graded=HSt.layers.some(l=>l.x2!==''&&l.x2!=null&&+l.x2!==+l.x);$('hAbrL').hidden=!graded;$('hAbr').checked=HSt.abr&&graded;
@@ -2607,7 +2706,7 @@ function hupdateNow(){
   const graded=HSt.layers.some(l=>l.x2!==''&&l.x2!=null&&+l.x2!==+l.x);
   const Rab=HSt.abr&&graded?abruptVariant():null;
   $('hf1').innerHTML=hdrawStruct(R);$('hf2').innerHTML=hdrawBands(R,Rab);$('hf3').innerHTML=hdrawDens(R);$('hf4').innerHTML=hdrawField(R);
-  const st=R.cfg.contact==='gate'?`V<sub>G</sub> = ${f2(R.cfg.VG)} V`:Math.abs(R.V)>1e-9?`bias ${f2(R.V)} V`:'equilibrium';
+  const st=R.cfg.contact==='gate'?`V<sub>G</sub> = ${f2(R.cfg.VG)} V`:(Math.abs(R.V)>1e-9?`bias ${f2(R.V)} V`:R.cfg.sun&&R.info.mode==='oled'?'short circuit':'equilibrium')+(R.cfg.sun&&R.info.mode==='oled'?' · 1 sun':'');
   $('hf2cap').innerHTML=`Fig. 2 · Band diagram<small>${st}${R.win&&R.cfg.sp?' · self-consistent Schrödinger–Poisson':''}</small>`;
   // fig 5
   const modes=f5modes(R);const fig=$('hf5fig');
@@ -2615,7 +2714,7 @@ function hupdateNow(){
     if(!modes.some(m=>m[0]===HSt.fig5))HSt.fig5=modes.some(m=>m[0]===HP[HSt.pi].fig5)?HP[HSt.pi].fig5:modes[0][0];
     $('hf5seg').innerHTML=modes.map(([k,t])=>`<button data-m="${k}" aria-pressed="${k===HSt.fig5}">${t}</button>`).join('');
     $('hf5seg').style.gridTemplateColumns=`repeat(${modes.length},auto)`;
-    const k=HSt.fig5;$('hf5cap').innerHTML={ns:'Fig. 5 · 2DEG sheet density vs gate voltage<small>self-consistent, swept in the background</small>',opt:'Fig. 5 · Wavefunctions and optical transitions<small>e1 and hh1 envelopes; stick heights are |⟨e|h⟩|²</small>',T:'Fig. 5 · Transmission through the quantum region<small>transfer matrix on the Γ band at the current bias</small>',JV:'Fig. 5 · Tunneling current–voltage<small>Tsu–Esaki, coherent transport</small>',rec:'Fig. 5 · Recombination profile<small>R = B·n·p (Langevin γ = q(μₙ+μₚ)/ε in organics), log scale</small>',JVo:'Fig. 5 · Current density and charge balance<small>drift–diffusion, swept in the background</small>'}[k];
+    const k=HSt.fig5;$('hf5cap').innerHTML={ns:'Fig. 5 · 2DEG sheet density vs gate voltage<small>self-consistent, swept in the background</small>',opt:'Fig. 5 · Wavefunctions and optical transitions<small>e1 and hh1 envelopes; stick heights are |⟨e|h⟩|²</small>',T:'Fig. 5 · Transmission through the quantum region<small>transfer matrix on the Γ band at the current bias</small>',JV:'Fig. 5 · Tunneling current–voltage<small>Tsu–Esaki, coherent transport</small>',rec:'Fig. 5 · Recombination profile<small>R = B·n·p (Langevin γ = q(μₙ+μₚ)/ε in organics), log scale</small>',JVo:'Fig. 5 · Current density and charge balance<small>drift–diffusion, swept in the background</small>',JVs:'Fig. 5 · Illuminated current–voltage<small>1 sun AM1.5G, drift–diffusion, swept in the background</small>',gen:'Fig. 5 · Photogeneration and recombination<small>Beer–Lambert with back-mirror second pass, log scale</small>'}[k];
     if(k==='opt'){const r=hdrawOpt(R);$('hf5').innerHTML=r.svg||r;const pr=(r.pairs||[]).filter(p=>p.ov>0.01).sort((a,b)=>a.E-b.E).slice(0,4);
       $('hf5kv').innerHTML=kvs(pr.map(p=>[`e${p.i+1}–hh${p.j+1}`,`${p.E.toFixed(3)} eV · ${(1239.84/p.E).toFixed(0)} nm · |⟨e|h⟩|² ${p.ov.toFixed(2)}`]))}
     else if(k==='T'||k==='JV'){const tr=transmission(R,null,k==='T'?null:Math.max(R.EL,R.ER)+0.35,1500);R._J=tsuEsaki(R,tr);
@@ -2624,10 +2723,13 @@ function hupdateNow(){
     else if(k==='ns'){runSweep('ns',R);drawF5Sweep()}
     else if(k==='rec'){$('hf5').innerHTML=hdrawRec(R);const r=recInt(R),tot=r.tot;const top2=r.per.map((v,i)=>[v,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,2);
       $('hf5kv').innerHTML=kvs([['Total ∫R dz',`${sci(tot)} cm⁻² s⁻¹`],['Recombination current q∫R dz',`${sci(tot*Q)} A/cm²`],['Peak',`${sci(r.pk)} cm⁻³ s⁻¹ at z = ${r.zp.toFixed(1)} nm`]].concat(top2.map(([v,i])=>[`Share in layer ${i+1} (${layerLabel(HSt.layers[i]).split(' · ')[0]})`,`${(100*v/tot).toFixed(1)} %`])))}
-    else if(k==='JVo'){runSweep('JVo',R);drawF5Sweep()}}
+    else if(k==='JVo'){runSweep('JVo',R);drawF5Sweep()}
+    else if(k==='JVs'){runSweep('JVs',R);drawF5Sweep()}
+    else if(k==='gen'){$('hf5').innerHTML=hdrawGen(R);const g=R.gen,r=recInt(R);const par=g?g.abs.map((a,i)=>[a,i]).filter(([a,i])=>!g.gen[i]&&a>1e-5).sort((a,b)=>b[0]-a[0]).slice(0,2):[];
+      $('hf5kv').innerHTML=kvs([['Photons in (above 1 eV)',g?`${(g.inc*1e3).toFixed(1)} mA/cm² equivalent`:'—'],['Absorbed in active layers',g?`${(g.Jgen*1e3).toFixed(2)} mA/cm²`:'—'],['Escaped (reflected out or transmitted)',g?`${((g.refl+g.trans)*1e3).toFixed(2)} mA/cm²`:'—']].concat(par.map(([a,i])=>[`Parasitic: layer ${i+1} (${layerLabel(HSt.layers[i]).split(' · ')[0]})`,`${(a*1e3).toFixed(2)} mA/cm²`])).concat([['Recombination q∫R dz',`${(r.tot*Q*1e3).toFixed(2)} mA/cm²`]]))}}
   hreadouts(R);
 }
-function loadPreset(i){const p=HP[i];HSt.pi=i;HSt.layers=clone(p.layers);HSt.contact=p.contact;HSt.phiB=p.phiB||0.8;HSt.VG=p.VG||0;HSt.V=p.V||0;HSt.abr=!!p.abr;HSt.fig5=p.fig5;HSt.edited=false;HSt.view='active';warmKey=null;drawTable();hupdate()}
+function loadPreset(i){const p=HP[i];HSt.pi=i;HSt.layers=clone(p.layers);HSt.contact=p.contact;HSt.phiB=p.phiB||0.8;HSt.VG=p.VG||0;HSt.V=p.V||0;HSt.abr=!!p.abr;HSt.fig5=p.fig5;HSt.sun=!!p.sun;HSt.edited=false;HSt.view='active';warmKey=null;drawTable();hupdate()}
 function hinit(){
   const pr=$('hpresets');HP.forEach((p,i)=>{const b=document.createElement('button');b.className='chip';b.textContent=p.name;b.onclick=()=>loadPreset(i);pr.appendChild(b)});
   $('hTable').addEventListener('input',onTable);$('hTable').addEventListener('change',onTable);
@@ -2640,7 +2742,7 @@ function hinit(){
   $('hVG').oninput=e=>{HSt.VG=+e.target.value;hupdate()};
   $('hV').oninput=e=>{HSt.V=+e.target.value;hupdate()};
   $('hSP').onchange=e=>{HSt.sp=e.target.checked;hupdate()};$('hPsi').onchange=e=>{HSt.psi=e.target.checked;hupdate()};$('hHoles').onchange=e=>{HSt.holes=e.target.checked;hupdate()};
-  $('hGam').onchange=e=>{HSt.gam=e.target.checked;hupdate()};$('hAbr').onchange=e=>{HSt.abr=e.target.checked;hupdate()};
+  $('hGam').onchange=e=>{HSt.gam=e.target.checked;hupdate()};$('hSun').onchange=e=>{HSt.sun=e.target.checked;HSt.edited=HSt.edited||HSt.sun!==!!HP[HSt.pi].sun;hupdate()};$('hAbr').onchange=e=>{HSt.abr=e.target.checked;hupdate()};
   $('hViewA').onclick=()=>{HSt.view='active';hupdate()};$('hViewF').onclick=()=>{HSt.view='full';hupdate()};
   $('hf5seg').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;HSt.fig5=b.dataset.m;hupdate()});
   loadPreset(4);
