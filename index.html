@@ -7,7 +7,7 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Contact &amp; Junction Bench</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
 <style>
 /* Layout: instrument bench — a control rail on the left, a 2×2 plate of textbook-style figures on the right */
 :root{
@@ -16,9 +16,9 @@
   --rect:#a35f00; --rect-bg:#fbefdc; --ohm:#13795a; --ohm-bg:#dcf1e6; --neu:#59695e; --neu-bg:#e4ebe5;
   --tun:#6a3fb5; --tun-bg:#ece5f8; --chip:#e1e9e3;
   color-scheme:light;
-  --f-display:"Poppins",system-ui,sans-serif;
-  --f-body:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"Poppins",system-ui,sans-serif;
+  --f-display:"Poppins","Noto Sans",system-ui,sans-serif;
+  --f-body:"Poppins","Noto Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Noto Sans","Poppins",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
@@ -155,6 +155,24 @@ body.basic .presets{display:none}
 .fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 2px;font-size:86%;line-height:1.2}
 .fr>span:first-child{border-bottom:1px solid currentColor;padding:0 3px 1px}.fr>span:last-child{padding:1px 3px 0}
 .ovl{border-top:1px solid currentColor;padding-top:1px}.bp{font-size:170%;line-height:1;vertical-align:middle;font-weight:300}
+.takeaway{margin:0;font-size:15px;line-height:1.5;max-width:95ch}
+.takeaway b{font-weight:600}
+@media (max-width:700px){
+  header h1{font-size:22px}header p{font-size:13px}
+  .tabrow .tabs{display:grid;grid-template-columns:1fr 1fr;overflow:visible;gap:0 6px;width:100%}
+  .tabs button{white-space:normal;font-size:13.5px;line-height:1.25;padding:8px 4px 9px;text-align:left}
+  .main{gap:14px}
+  .rail{padding:12px 12px;gap:12px}
+  .exlist{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}
+  .exlist button{flex:none;white-space:nowrap;scroll-snap-align:start}
+  .basic-note{display:none}
+  .status{padding:12px}
+  .kv{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px}
+  .kv dd{font-size:13px}
+  figure{padding:8px 8px 6px}
+  figure>div{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  figure.scrolls::after{content:"Swipe sideways to see the whole figure →";display:block;font-size:11.5px;color:var(--muted);margin-top:4px}
+}
 .lesson{border:1px solid var(--line);border-left:3px solid var(--ef);border-radius:6px;padding:10px 14px 4px;background:#fff;max-width:100ch}
 .lesson p{margin:0 0 8px}
 .lesson .lk{font-size:13.5px}
@@ -166,7 +184,7 @@ body.basic .lesson .la,body:not(.basic) .lesson .lb{display:none}
 .notes summary{cursor:pointer;font-weight:500;color:var(--ink)}
 /* SVG */
 svg text{font-family:var(--f-body);font-size:13px;fill:var(--ink)}
-svg .m{font-family:var(--f-mono);font-size:12px}
+svg .m{font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums}
 svg .mut{fill:var(--muted)}
 svg .halo{paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
 svg .ax{stroke:var(--muted);stroke-width:1;fill:none}
@@ -280,6 +298,7 @@ svg .efc{fill:var(--ef)}
 <section class="figs">
   <div class="status">
     <div class="status-top"><span class="pill" id="pill"></span><span class="sub-pill" id="subpill"></span><span id="warns"></span></div>
+    <p class="takeaway" id="tk-ms" hidden></p>
     <dl class="kv" id="kv"></dl>
   </div>
   <div class="plate">
@@ -405,6 +424,7 @@ svg .efc{fill:var(--ef)}
 <section class="figs">
   <div class="status">
     <div class="status-top"><span class="pill" id="jpill"></span><span class="sub-pill" id="jsub"></span><span id="jwarns"></span></div>
+    <p class="takeaway" id="tk-hj" hidden></p>
     <dl class="kv" id="jkv"></dl>
   </div>
   <div class="plate">
@@ -525,6 +545,7 @@ svg .efc{fill:var(--ef)}
 <section class="figs">
   <div class="status">
     <div class="status-top"><span class="pill" id="mpill"></span><span class="sub-pill" id="msub"></span><span id="mwarns"></span></div>
+    <p class="takeaway" id="tk-mos" hidden></p>
     <dl class="kv" id="mkv"></dl>
   </div>
   <div class="plate">
@@ -635,6 +656,7 @@ svg .efc{fill:var(--ef)}
 <section class="figs">
   <div class="status">
     <div class="status-top"><span class="pill" id="hpill"></span><span class="sub-pill" id="hsub"></span><span id="hwarns"></span></div>
+    <p class="takeaway" id="tk-hs" hidden></p>
     <dl class="kv" id="hkv"></dl>
   </div>
   <figure class="stackcard adv">
@@ -3021,6 +3043,52 @@ window.__H={HSt,HP,loadPreset,hupdateNow,get R(){return lastR},get sweep(){retur
 <script>
 /* ===================== Exemplar lessons ===================== */
 const LESSONS={};
+const TAKE={
+'tab-ms':{
+'Au / n-Si · Schottky':'A 1.05 eV barrier forms, so this contact rectifies. Start by comparing Figs. 1 and 2, then see the diode curve in Fig. 5.',
+'Mg / n-Si · ohmic':'A low work-function metal accumulates electrons at the surface: no barrier, so current flows both ways. Look at how the bands bend down in Fig. 2.',
+'Al / p-Si · Schottky':'On p-type silicon a low work-function metal makes the barrier, this time for holes (0.89 eV). Compare the sign of the charge in Fig. 3 with Au / n-Si.',
+'Pt / p-Si · ohmic':'A high work-function metal accumulates holes on p-Si: an ohmic contact. Fig. 2 shows the valence band rising to meet E<sub>F</sub>.',
+'Au / n⁺ Si · tunneling':'The same 1.05 eV barrier as Au / n-Si, but only ≈5 nm thick, so electrons tunnel through it and the contact is ohmic. Compare W with the first exemplar.',
+'Au / n-GaAs · pinned':'Interface states pin the Fermi level, so the barrier (0.93 eV) barely depends on the metal. Note the vacuum-level step at the interface in Fig. 2.',
+'Ni / p-GaN:Mg · deep acceptor':'No metal is deep enough for p-GaN, and only ≈13 % of the Mg releases a hole, so the contact strongly rectifies. Check the ionization readout.'},
+'tab-hj':{
+'Si p–n':'Diffusion across the junction leaves fixed charge that builds a 0.71 V barrier: the diode. Start with Fig. 2, then Fig. 5.',
+'Si p⁺–n one-sided':'Unequal doping puts almost all the depletion in the lightly doped n side. Compare the two charge blocks in Fig. 3.',
+'Si n⁺–n high–low':'Same type, different doping: a small 0.21 eV step that majority carriers cross freely but minority carriers feel. Fig. 5 is nearly a straight line.',
+'P-AlGaAs / n-GaAs':'Different band gaps give band-edge steps at the interface, and current is carried almost entirely by one carrier type. Look at x = 0 in Fig. 2.',
+'N-AlGaAs / n-GaAs · accumulation':'Electrons leave the doped AlGaAs and collect in a thin notch on the GaAs side: modulation doping. Look at the notch in Fig. 2.',
+'p-InGaAs / N-InP':'The telecom-photodiode junction: a narrow-gap absorber against a transparent wide-gap window. See the two band offsets in Fig. 2.',
+'p-GaN:Mg / n-GaN':'The blue-LED junction: a 3.25 V built-in barrier, so the diode turns on near 3 V. Check the turn-on readout under Fig. 5.',
+'AlGaN / GaN · polarization':'Built-in polarization leaves a positive sheet charge that pulls ≈10¹³ electrons/cm² to the interface with no doping. See the field jump in Fig. 4.',
+'p-Ge / n-Si · staggered':'Both band edges step the same way (Type II), separating electrons and holes across the interface. Compare ΔE_C and ΔE_V in Fig. 2.',
+'n-InAs / p-GaSb · broken gap':'One conduction band lies below the other valence band, so electrons and holes face each other with no gap between. See Fig. 3.',
+'Si p⁺⁺–n⁺⁺ Esaki tunnel diode':'Degenerate doping makes a 4 nm junction that electrons tunnel straight through, giving a current peak and negative resistance. See Fig. 5.',
+'ITO / p-Si heterojunction':'Degenerate ITO behaves almost like a metal, so all the band bending falls in the silicon. Compare the two sides in Fig. 2.',
+'ITO / p⁺⁺-Si tunnel recombination junction':'Both sides degenerate: electrons tunnel straight into the Si valence band, so current passes either way with little loss. See Fig. 5.'},
+'tab-mos':{
+'n⁺poly / SiO₂ / p-Si · NMOS':'Positive gate voltage pulls electrons to the p-type surface and inverts it: the MOSFET channel. Sweep V<sub>G</sub> and watch the regime label and Fig. 5.',
+'p⁺poly / SiO₂ / n-Si · PMOS':'The mirror image of NMOS: negative gate voltage forms a hole channel. Compare the C–V curve in Fig. 5 with NMOS.',
+'Al / 100 nm SiO₂ / p-Si · classic C–V':'The textbook C–V measurement: capacitance drops in depletion and, at high frequency, stays low in inversion. Start with Fig. 5.',
+'… with +5×10¹¹ fixed charge':'Charge trapped in the oxide slides the whole C–V curve 2.3 V to the left without changing its shape. Compare V<sub>FB</sub> with the previous exemplar.',
+'TiN / 3 nm HfO₂ / p-Si · high-k':'A high-k oxide gives the capacitance of 0.53 nm of SiO₂ while staying thick enough to block leakage. Check the C<sub>ox</sub> · EOT readout.',
+'Ni / Al₂O₃ / n-GaN':'GaN\'s wide gap means an inversion layer almost never forms, so the capacitor goes into deep depletion. Compare the C–V branches in Fig. 5.',
+'Mo / SiO₂ / n-4H-SiC':'The power-MOSFET material: like GaN, it deep-depletes instead of inverting. Note the wide depletion region in Fig. 3.'},
+'tab-hs':{
+'GaAs/AlGaAs quantum well':'An 8 nm well quantizes electrons and holes into discrete levels; the e1–hh1 transition sets the emission at ≈840 nm. See the states in Fig. 2.',
+'GaAs/AlGaAs superlattice':'Coupled wells turn one level into a miniband of six states. Count the resonances in Fig. 5.',
+'AlGaAs/GaAs HEMT':'Electrons from the doped AlGaAs collect in a thin triangular well, the transistor channel, and the gate controls how many. See Figs. 2 and 5.',
+'pHEMT · InGaAs channel':'A strained InGaAs channel adds a deeper well that holds more electrons than a plain GaAs HEMT. Compare n<sub>s</sub> in Fig. 5.',
+'AlGaN/GaN HEMT':'Polarization charge (▲ in Fig. 4) creates a dense 2DEG with no doping, so the transistor is normally on. See Fig. 5 for the threshold.',
+'InGaN/GaN QW LED':'Polarization tilts the well and pulls electrons and holes apart, reducing light output. See the separated wavefunctions in Fig. 5.',
+'GRIN-SCH GaAs QW laser':'The quasi-Fermi levels split by more than the photon energy, which is the condition for laser gain. Compare the E<sub>Fn</sub> − E<sub>Fp</sub> readout with e1–hh1.',
+'AlGaAs/GaAs HBT · graded emitter':'Grading the emitter composition removes the conduction-band spike that an abrupt junction would leave. See the smooth E<sub>C</sub> in Fig. 2.',
+'Bilayer OLED · ITO/NPB/Alq₃':'Holes and electrons pile up at the organic–organic interface and recombine there to emit light. See where recombination peaks in Fig. 5.',
+'Multilayer phosphorescent OLED':'Each layer has one job, so injection balances and almost every carrier recombines in the emitting layer. See Fig. 5.',
+'Silicon heterojunction (HIT) solar cell':'Light absorbed in the wafer is split into electrons and holes by thin a-Si:H contacts: ≈40 mA/cm² at ≈0.73 V. Start with the J–V in Fig. 5.',
+'Perovskite p-i-n solar cell · ITO/PTAA/MAPbI₃/C₆₀':'A 0.5 µm perovskite absorbs nearly all sunlight above its gap and gives a high voltage (≈1.16 V). Start with the J–V in Fig. 5.',
+'AlAs/GaAs resonant tunneling diode':'Electrons pass both barriers only when their energy matches the well level, so current peaks and then falls with bias. See Fig. 5.'}
+};
 LESSONS['tab-ms']={
 'Au / n-Si · Schottky':{
 b:`<p>Gold has a larger work function (5.1 eV) than n-type silicon (about 4.26 eV here). When the two touch, electrons flow from the silicon into the gold until the Fermi levels line up. The electrons leave behind positively charged donor ions near the surface: a <i>depletion region</i> about 0.3 µm wide. The donor charge makes an electric field that bends the bands upward, creating a barrier that electrons must climb to get from the semiconductor into the metal.</p>
@@ -3341,7 +3409,8 @@ for(const [tab,pid,def] of tabs){
   fs.innerHTML='<legend>Exemplars</legend><div class="exlist" role="group" aria-label="Exemplars"></div><span class="basic-note">Switch on Advanced to change materials, doping and every other parameter.</span>';
   const list=fs.querySelector('.exlist');
   const mark=i=>{sel[tab]=i;[...list.children].forEach((b,j)=>b.setAttribute('aria-pressed',j===i));chips.forEach((b,j)=>b.setAttribute('aria-pressed',j===i));
-    const nm=chips[i]?chips[i].textContent:'',L=(LESSONS[tab]||{})[nm],box=document.getElementById('lesson-'+tab.slice(4));
+    const nm=chips[i]?chips[i].textContent:'',L=(LESSONS[tab]||{})[nm],box=document.getElementById('lesson-'+tab.slice(4)),tk=document.getElementById('tk-'+tab.slice(4)),T=(TAKE[tab]||{})[nm];
+    if(tk){tk.hidden=!T;if(T)tk.innerHTML='<b>Takeaway:</b> '+T}
     if(box){box.hidden=!L;if(L)box.innerHTML=`<div class="lhd"><span>Exemplar</span><b>${nm}</b><span class="lvl lb">Introductory</span><span class="lvl la">Graduate level</span></div><div class="lb">${L.b}</div><div class="la">${L.a}</div>`}};
   chips.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.textContent=c.textContent;b.onclick=()=>{c.click()};list.appendChild(b);c.addEventListener('click',()=>mark(i))});
   rail.insertBefore(fs,rail.firstChild);
@@ -3357,6 +3426,14 @@ function setMode(adv,restore){
 sw.onclick=()=>setMode(sw.getAttribute('aria-checked')!=='true',true);
 let adv=false;try{adv=localStorage.getItem('bench-mode')==='adv'}catch(e){}
 setMode(adv,false);
+
+/* phone layout: keep figure text legible by letting wide figures scroll sideways */
+const FIG_MIN=0.72;let fitRaf=null;
+function fitFigs(){fitRaf=null;const narrow=innerWidth<=700;
+  document.querySelectorAll('figure > div > svg').forEach(s=>{const w=s.viewBox&&s.viewBox.baseVal?s.viewBox.baseVal.width:0;s.style.minWidth=narrow&&w?Math.round(w*(w>700?FIG_MIN:0.6))+'px':'';
+    const d=s.parentElement,f=d.closest('figure'),sc=!!(narrow&&d.scrollWidth>d.clientWidth+2);f.classList.toggle('scrolls',sc);})}
+const qfit=()=>{if(!fitRaf)fitRaf=requestAnimationFrame(fitFigs)};
+new MutationObserver(qfit).observe(document.body,{childList:true,subtree:true});addEventListener('resize',qfit);qfit();
 })();
 </script>
 
