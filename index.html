@@ -7,7 +7,7 @@
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Contact &amp; Junction Bench</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap">
 <style>
 /* Layout: instrument bench — a control rail on the left, a 2×2 plate of textbook-style figures on the right */
 :root{
@@ -16,9 +16,9 @@
   --rect:#a35f00; --rect-bg:#fbefdc; --ohm:#13795a; --ohm-bg:#dcf1e6; --neu:#59695e; --neu-bg:#e4ebe5;
   --tun:#6a3fb5; --tun-bg:#ece5f8; --chip:#e1e9e3;
   color-scheme:light;
-  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
-  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --f-display:"Poppins",system-ui,sans-serif;
+  --f-body:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Poppins",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
@@ -149,7 +149,7 @@ body.basic .presets{display:none}
 .notes .nlist{padding-left:22px;margin:6px 0}.notes .nlist li{margin:3px 0}
 .notes ol.refs{padding-left:24px;margin:6px 0}.notes ol.refs li{margin:5px 0;overflow-wrap:anywhere}
 .notes a,.lesson a{color:var(--ef)}
-.eq{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:10px 0;padding:8px 14px;background:var(--panel);border:1px solid var(--line);border-radius:6px;font-family:"Cambria Math","STIX Two Math","Latin Modern Math","Times New Roman",serif;font-size:16px;overflow-x:auto;line-height:1.6}
+.eq{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:10px 0;padding:8px 14px;background:var(--panel);border:1px solid var(--line);border-radius:6px;font-family:var(--f-body);font-size:15px;overflow-x:auto;line-height:1.6}
 .eq>span:first-child{white-space:nowrap}
 .eqn{font-family:var(--f-mono);font-size:12px;color:var(--muted);flex:none}
 .fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 2px;font-size:86%;line-height:1.2}
@@ -281,9 +281,6 @@ svg .efc{fill:var(--ef)}
   <div class="status">
     <div class="status-top"><span class="pill" id="pill"></span><span class="sub-pill" id="subpill"></span><span id="warns"></span></div>
     <dl class="kv" id="kv"></dl>
-    <div class="lesson" id="lesson-ms"></div>
-    <div class="livehd" id="live-ms">Live analysis · follows the sliders</div>
-    <p class="story" id="story"></p>
   </div>
   <div class="plate">
     <figure><figcaption>Fig. 1 · Before contact<small>isolated, common vacuum level</small></figcaption><div id="f1"></div></figure>
@@ -299,6 +296,11 @@ svg .efc{fill:var(--ef)}
     <div id="f5"></div>
     <dl class="kv" id="ivkv"></dl>
   </figure>
+  <div class="status descr">
+    <div class="lesson" id="lesson-ms"></div>
+    <div class="livehd" id="live-ms">Live analysis · follows the sliders</div>
+    <p class="story" id="story"></p>
+  </div>
   <details class="notes">
     <summary>Model, equations and further reading</summary>
     <p class="nlead">This section documents what the solver computes on this tab, in roughly the order a textbook chapter on metal–semiconductor contacts would present it. Equation numbers are local to the tab. Material constants are room-temperature (300 K) literature values (Sze &amp; Ng; the Ioffe database) and are approximate.</p>
@@ -404,9 +406,6 @@ svg .efc{fill:var(--ef)}
   <div class="status">
     <div class="status-top"><span class="pill" id="jpill"></span><span class="sub-pill" id="jsub"></span><span id="jwarns"></span></div>
     <dl class="kv" id="jkv"></dl>
-    <div class="lesson" id="lesson-hj"></div>
-    <div class="livehd" id="live-hj">Live analysis · follows the sliders</div>
-    <p class="story" id="jstory"></p>
   </div>
   <div class="plate">
     <figure><figcaption>Fig. 1 · Before contact<small>isolated, common vacuum level</small></figcaption><div id="jf1"></div></figure>
@@ -422,6 +421,11 @@ svg .efc{fill:var(--ef)}
     <div id="jf5"></div>
     <dl class="kv" id="jivkv"></dl>
   </figure>
+  <div class="status descr">
+    <div class="lesson" id="lesson-hj"></div>
+    <div class="livehd" id="live-hj">Live analysis · follows the sliders</div>
+    <p class="story" id="jstory"></p>
+  </div>
   <details class="notes">
     <summary>Model, equations and further reading</summary>
     <p class="nlead">This tab joins two semi-infinite semiconductors, A on the left and B on the right, at x = 0. Each side's bulk statistics follow §2 of the metal–semiconductor tab: Fermi–Dirac carriers, incomplete ionization and the Mott transition. Degenerate layers such as ITO or n⁺⁺ Si are therefore handled correctly.</p>
@@ -522,9 +526,6 @@ svg .efc{fill:var(--ef)}
   <div class="status">
     <div class="status-top"><span class="pill" id="mpill"></span><span class="sub-pill" id="msub"></span><span id="mwarns"></span></div>
     <dl class="kv" id="mkv"></dl>
-    <div class="lesson" id="lesson-mos"></div>
-    <div class="livehd" id="live-mos">Live analysis · follows the sliders</div>
-    <p class="story" id="mstory"></p>
   </div>
   <div class="plate">
     <figure><figcaption>Fig. 1 · Before contact<small>isolated, common vacuum level</small></figcaption><div id="mf1"></div></figure>
@@ -539,6 +540,11 @@ svg .efc{fill:var(--ef)}
     <div id="mf5"></div>
     <dl class="kv" id="mcvkv"></dl>
   </figure>
+  <div class="status descr">
+    <div class="lesson" id="lesson-mos"></div>
+    <div class="livehd" id="live-mos">Live analysis · follows the sliders</div>
+    <p class="story" id="mstory"></p>
+  </div>
   <details class="notes">
     <summary>Model, equations and further reading</summary>
     <p class="nlead">The ideal MOS capacitor: a gate of work function φ<sub>m</sub>, an insulator of permittivity κε<sub>0</sub> and thickness t<sub>ox</sub> with no leakage, and a semi-infinite semiconductor. Interface traps are absent. An optional fixed sheet charge Q<sub>f</sub> sits at the insulator/semiconductor interface. Semiconductor statistics follow §2 of the metal–semiconductor tab.</p>
@@ -630,9 +636,6 @@ svg .efc{fill:var(--ef)}
   <div class="status">
     <div class="status-top"><span class="pill" id="hpill"></span><span class="sub-pill" id="hsub"></span><span id="hwarns"></span></div>
     <dl class="kv" id="hkv"></dl>
-    <div class="lesson" id="lesson-hs"></div>
-    <div class="livehd" id="live-hs">Live analysis · follows the sliders</div>
-    <p class="story" id="hstory"></p>
   </div>
   <figure class="stackcard adv">
     <div class="ivhead"><figcaption>Layer stack<small>surface (left) → substrate (right) · edit any cell</small></figcaption>
@@ -652,6 +655,11 @@ svg .efc{fill:var(--ef)}
     <div id="hf5"></div>
     <dl class="kv" id="hf5kv"></dl>
   </figure>
+  <div class="status descr">
+    <div class="lesson" id="lesson-hs"></div>
+    <div class="livehd" id="live-hs">Live analysis · follows the sliders</div>
+    <p class="story" id="hstory"></p>
+  </div>
   <details class="notes">
     <summary>Model, equations and further reading</summary>
     <p class="nlead">This tab solves a layered structure along the growth direction z, from the surface (left) to the substrate (right). Depending on the stack it combines four solvers: Poisson's equation, the Schrödinger equation in a marked quantum region, transfer-matrix tunneling, and drift–diffusion for two-contact devices.</p>
@@ -1154,7 +1162,7 @@ function readouts(R){
   else{txt='Neutral contact';sub.textContent='φm ≈ φs, bands nearly flat'}
   pill.className='pill '+cls;pill.textContent=txt;
   const w=[];
-  if(R.inversion)w.push('Surface inversion');else if(R.invPot)w.push('Minority carriers would invert the surface: enable them under Display');
+  if(R.inversion)w.push('Surface inversion');else if(R.invPot)w.push('Minority carriers would invert the surface: turn on Advanced, then enable them under Display');
   $('warns').innerHTML=w.map(x=>`<span class="warn">${x}</span>`).join(' ');
   const items=[
     [R.isN?'Barrier qφBn (electrons)':'Barrier qφBp (holes)',(R.isN?R.phiBn:R.phiBp)>0?`${(R.isN?R.phiBn:R.phiBp).toFixed(3)} eV`:`none (${f3(R.isN?R.phiBn:R.phiBp)} eV)`],
