@@ -12,7 +12,7 @@
 /* Layout: instrument bench — a control rail on the left, a 2×2 plate of textbook-style figures on the right */
 :root{
   --bg:#edf2ee; --panel:#fbfdfb; --ink:#16211b; --muted:#59695e; --line:#d1dbd3; --grid:#e3eae4;
-  --ef:#13795a; --pos:#c4432a; --neg:#2257c2; --metal:#8c9a90; --mfill:#d2dbd4; --vac:#839488;
+  --ef:#13795a; --pos:#2257c2; --neg:#c4432a; --fld:#2257c2; --metal:#8c9a90; --mfill:#d2dbd4; --vac:#839488;
   --rect:#a35f00; --rect-bg:#fbefdc; --ohm:#13795a; --ohm-bg:#dcf1e6; --neu:#59695e; --neu-bg:#e4ebe5;
   --tun:#6a3fb5; --tun-bg:#ece5f8; --chip:#e1e9e3;
   color-scheme:light;
@@ -82,7 +82,7 @@ svg .ivdot{fill:var(--ef);stroke:var(--panel);stroke-width:2}
 .tabs button:hover{color:var(--ink)}
 .seg.three{grid-template-columns:1fr 1fr 1fr}
 svg .oxfill{fill:var(--rect-bg);opacity:.7;stroke:none}
-svg .hfdot{fill:var(--neg);stroke:var(--panel);stroke-width:1.5}
+svg .hfdot{fill:var(--fld);stroke:var(--panel);stroke-width:1.5}
 svg .sideA{fill:var(--grid);opacity:.55;stroke:none}
 svg .efq{stroke:var(--ef);stroke-width:1.2;stroke-dasharray:2 4;fill:none}
 svg .ivn{stroke:var(--neg);stroke-width:1.4;stroke-dasharray:6 4;fill:none}
@@ -185,6 +185,8 @@ body.basic .lesson .la,body:not(.basic) .lesson .lb{display:none}
 /* SVG */
 svg text{font-family:var(--f-body);font-size:13px;fill:var(--ink)}
 svg .m{font-family:var(--f-mono);font-size:12px;font-variant-numeric:tabular-nums}
+svg .fl-e{stroke:var(--neg);fill:none}svg .fl-h{stroke:var(--pos);fill:none}svg .fa-e{fill:var(--neg)}svg .fa-h{fill:var(--pos)}
+svg .flowhd{font-size:12px;font-weight:600;fill:var(--ink)}svg .flowsub{font-size:11px;font-weight:400;fill:var(--muted)}svg .flowlab{font-size:13px;font-weight:600}svg .fl-te{fill:var(--neg)}svg .fl-th{fill:var(--pos)}
 svg .mut{fill:var(--muted)}
 svg .halo{paint-order:stroke;stroke:var(--panel);stroke-width:4px;stroke-linejoin:round}
 svg .ax{stroke:var(--muted);stroke-width:1;fill:none}
@@ -204,8 +206,8 @@ svg .nf{fill:var(--neg);fill-opacity:.22;stroke:var(--neg);stroke-width:1.6}
 svg .pt{fill:var(--pos);font-family:var(--f-mono);font-weight:500}
 svg .nt{fill:var(--neg);font-family:var(--f-mono);font-weight:500}
 svg .ed{fill:var(--neg)} svg .hd{fill:none;stroke:var(--pos);stroke-width:1.2}
-svg .efill{fill:var(--neg);fill-opacity:.14;stroke:none}
-svg .eline{stroke:var(--neg);stroke-width:2;fill:none}
+svg .efill{fill:var(--fld);fill-opacity:.14;stroke:none}
+svg .eline{stroke:var(--fld);stroke-width:2;fill:none}
 svg .efc{fill:var(--ef)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -911,6 +913,22 @@ function ticks(min,max,n=5){const span=max-min;if(span<=0)return [min];const st=
   const step=st*(err<=0.15?10:err<=0.35?5:err<=0.75?2:1);const out=[];for(let v=Math.ceil(min/step)*step;v<=max+1e-12*span;v+=step)out.push(+v.toPrecision(12));return out}
 function hash(i){let x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x)}
 const svg=(w,h,inner,label)=>`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">${inner}</svg>`;
+/* ---------- carrier-flow strip drawn above a band diagram ----------
+   rows: [{c:'e'|'h', segs:[{a,b,dir,w,dash}]}], a/b are pixel x, dir = direction carriers move (+1 = right) */
+const FH=70;
+const fmtJ=J=>{const a=Math.abs(J);return a>=1e-3&&a<1e3?(a*1e3>=100?(a*1e3).toFixed(0):(a*1e3).toPrecision(3))+' mA/cm²':sci(a)+' A/cm²'};
+function flowWrap(W,H,inner,label,strip){return strip==null?svg(W,H,inner,label):`<svg viewBox="0 0 ${W} ${H+FH}" role="img" aria-label="${label}, with carrier-flow arrows">${strip}<g transform="translate(0 ${FH})">${inner}</g></svg>`}
+function flowArrow(a,b,y,dir,w,c,dash){const x0=Math.min(a,b),x1=Math.max(a,b),hl=5+w*1.6,hw=3+w*1.3;
+  const tip=dir>0?x1:x0,base=dir>0?x1-hl:x0+hl,ls=dir>0?x0:x1;
+  return `<line x1="${r1(ls)}" y1="${y}" x2="${r1(base)}" y2="${y}" class="fl-${c}" stroke-width="${w.toFixed(2)}"${dash?' stroke-dasharray="3 3"':''}/><polygon points="${r1(tip)},${y} ${r1(base)},${r1(y-hw)} ${r1(base)},${r1(y+hw)}" class="fa-${c}"/>`}
+function flowStrip(px0,px1,rows,note){
+  let s=`<text x="${px0}" y="12" class="flowhd">Carrier flow</text><text x="${px0}" y="63" class="flowsub">Arrow = direction the carriers move; width ∝ current. Conventional current follows holes.</text>`;
+  if(note)s+=`<text x="${px1}" y="12" text-anchor="end" class="flowsub">${note}</text>`;
+  if(!rows||!rows.length){s+=`<text x="${(px0+px1)/2}" y="38" text-anchor="middle" class="flowsub">No net current: at equilibrium drift and diffusion cancel for each carrier. Apply a bias.</text>`;return s}
+  rows.forEach((rw,k)=>{const y=30+k*18;s+=`<text x="${px0-8}" y="${y+4}" text-anchor="end" class="flowlab fl-t${rw.c}">${rw.c==='e'?'e⁻':'h⁺'}</text>`;
+    for(const g of rw.segs)s+=flowArrow(g.a,g.b,y,g.dir,g.w,rw.c,g.dash)});
+  return s}
+const flowW=share=>share>=1e-3?1.2+4.8*Math.sqrt(Math.min(share,1)):0.9;
 const xUnit=xmax=>xmax<1e-4?{f:1e7,u:'nm'}:{f:1e4,u:'µm'};
 
 /* ---------- Fig 1: before contact ---------- */
@@ -947,7 +965,7 @@ function drawBefore(R){
 }
 
 /* ---------- Fig 2: in contact ---------- */
-function drawAfter(R){
+function drawAfter(R,I){
   const W=640,H=430,top=22,bot=H-46,px0=62,px1=628;
   const xL=-0.24*R.xmax,xs=x=>px0+(x-xL)/(R.xmax-xL)*(px1-px0);
   const Ec=R.U.map(u=>R.Ecb-VT*u),Ev=Ec.map(e=>e-R.Eg);
@@ -1020,7 +1038,11 @@ function drawAfter(R){
   }else if(R.regime==='ohmic'){
     s+=T(x0+22,R.isN?y(Ec0)-18:y(Ev0)+28,R.isN?'electron accumulation':'hole accumulation','mut halo');
   }
-  return svg(W,H,s,'Band diagram of the metal–semiconductor contact');
+  let rows=[],note='';
+  if(I&&R.regime==='schottky'&&Math.abs(S.V)>1e-9&&Math.abs(I.J0)>1e-30){const c=R.isN?'e':'h',dir=I.J0>0?-1:1;
+    rows=[{c,segs:[{a:xs(-0.15*R.xmax),b:xs(0.55*R.xmax),dir,w:4}]}];
+    note=`majority ${R.isN?'electrons':'holes'} ${dir<0?'semiconductor → metal':'metal → semiconductor'} · |J| = ${fmtJ(I.J0)}`}
+  return flowWrap(W,H,s,'Band diagram of the metal–semiconductor contact',flowStrip(px0,px1,rows,note));
 }
 
 /* ---------- Fig 3 / 4 shared frame ---------- */
@@ -1246,9 +1268,9 @@ function update(){
   $('VO').textContent=(S.V>=0?'+':'−')+Math.abs(S.V).toFixed(2)+' V';
   $('Vhint').textContent=R.regime==='schottky'?`Bias across the barrier itself; the applied voltage in Fig. 5 adds the series-resistance drop. Positive is forward (limit ${R.Vmax.toFixed(2)} V, just under V_bi).`:'Bias applies to rectifying contacts only.';
   $('f2cap').innerHTML=`Fig. 2 · In contact<small>${Math.abs(S.V)>1e-9?(S.V>0?'forward':'reverse')+' bias '+Math.abs(S.V).toFixed(2)+' V':'thermal equilibrium, E<sub>F</sub> flat'}</small>`;
-  $('f1').innerHTML=drawBefore(R);$('f2').innerHTML=drawAfter(R);$('f3').innerHTML=drawCharge(R);$('f4').innerHTML=drawField(R);
-  readouts(R);story(R);
-  const I=ivModel(R);$('f5').innerHTML=drawIV(R,I);ivReadouts(R,I);
+  const I=ivModel(R);
+  $('f1').innerHTML=drawBefore(R);$('f2').innerHTML=drawAfter(R,I);$('f3').innerHTML=drawCharge(R);$('f4').innerHTML=drawField(R);
+  readouts(R);story(R);$('f5').innerHTML=drawIV(R,I);ivReadouts(R,I);
   $('ivLog').setAttribute('aria-pressed',S.ivLog);$('ivLin').setAttribute('aria-pressed',!S.ivLog);
 }
 function setSemi(name,keep){S.semi=name;const m=SEMIS[name];if(!keep){S.chi=m.chi;S.Eg=m.Eg}fillDopants();$('semiSel').value=name}
@@ -1314,6 +1336,10 @@ const JPRE=[
  ['p-Ge / n-Si · staggered',{A:['Ge','p','Ga',17],B:['Si','n','P',17]}],
  ['n-InAs / p-GaSb · broken gap',{A:['InAs','n','S',16],B:['GaSb','p','Zn',17]}],
  ['Si p⁺⁺–n⁺⁺ Esaki tunnel diode',{A:['Si','p','B',20.3],B:['Si','n','P',20.3],lin:true,tser:0.5,win:[-0.1,0.9]}],
+ ['Si p⁺–p · back-surface field',{A:['Si','p','Al',19],B:['Si','p','B',16]}],
+ ['P-AlGaAs / p-GaAs · hole barrier',{A:['AlGaAs','p','Be',18],B:['GaAs','p','Be',16.5],zoom:10}],
+ ['4H-SiC n⁺–n⁻ · drift layer',{A:['4H-SiC','n','N',19],B:['4H-SiC','n','N',15]}],
+ ['p⁺⁺-GaN / p-GaN · Mg contact layer',{A:['GaN','p','Mg',20],B:['GaN','p','Mg',19],zoom:10}],
  ['ITO / p-Si heterojunction',{A:['ITO','n','Sn',20.7],B:['Si','p','B',16]}],
  ['ITO / p⁺⁺-Si tunnel recombination junction',{A:['ITO','n','Sn',20.7],B:['Si','p','B',20.3],lin:true,tser:0.5,win:[-1.0,0.3]}]
 ];
@@ -1503,7 +1529,7 @@ function jdrawBefore(R){
   return svg(W,H,s,'Band diagrams of the two semiconductors before contact');
 }
 function sideXY(P,neg){const X=[],U=[];for(let i=0;i<P.X.length;i++){X.push(neg?-P.X[i]:P.X[i]);U.push(P.U[i])}return {X,U}}
-function jdrawAfter(R){
+function jdrawAfter(R,op){
   const A=R.A,B=R.B,W=640,H=440,top=22,bot=H-50,px0=62,px1=628,Lx=R.L;
   const xs=x=>px0+(x+Lx)/(2*Lx)*(px1-px0),x0=xs(0);
   const EcAx=R.PA.U.map(u=>R.EcA-VT*u),EcBx=R.PB.U.map(u=>R.EcB-VT*u);
@@ -1580,7 +1606,12 @@ function jdrawAfter(R){
     const nmw=R.aniso?(S.isN?'x<tspan font-size="72%" dy="3">n</tspan><tspan dy="-3">':'x<tspan font-size="72%" dy="3">p</tspan><tspan dy="-3">'):'W<tspan font-size="72%" dy="3">'+(left?'A':'B')+'</tspan><tspan dy="-3">';
     return L(X,top+16,X,bot,'guide')+T(X,top+11,`${nmw} = ${len(w)}</tspan>`,'m halo','middle')};
   s+=wl(R.WA,true,A)+wl(R.WB,false,B);
-  return svg(W,H,s,'Band diagram of the semiconductor junction');
+  let rows=[],note='';
+  if(op&&!R.eq){const Je=op.Jn+(op.Jbt||0)+(op.Jgr||0)/2,Jh=op.Jp+(op.Jgr||0)/2,mx=Math.max(Math.abs(Je),Math.abs(Jh));
+    if(mx>1e-30){const seg=J=>({a:xs(-0.62*Lx),b:xs(0.62*Lx),dir:J>0?1:-1,w:flowW(Math.abs(J)/mx),dash:Math.abs(J)/mx<1e-3});
+      const dirE=Je>0?-1:1;rows=[{c:'e',segs:[{...seg(Je),dir:dirE}]},{c:'h',segs:[seg(Jh)]}];
+      note=`J<tspan font-size="75%" dy="3">n</tspan><tspan dy="-3"> ${fmtJ(Je)} · J</tspan><tspan font-size="75%" dy="3">p</tspan><tspan dy="-3"> ${fmtJ(Jh)}${Math.abs(op.Jbt||0)>0.5*mx?' · mostly band-to-band tunneling':''}</tspan>`}}
+  return flowWrap(W,H,s,'Band diagram of the semiconductor junction',flowStrip(px0,px1,rows,note));
 }
 function jframe(Lx){const W=520,H=300,top=20,bot=H-44,px0=74,px1=508;return {W,H,top,bot,px0,px1,xs:x=>px0+(x+Lx)/(2*Lx)*(px1-px0)}}
 function jaxisX(F,Lx){const xu=xUnit(Lx);let s=L(F.px0,F.bot,F.px1,F.bot,'ax');
@@ -1735,8 +1766,8 @@ function jstory(R){
     if(Math.abs(R.V)>1e-9){const f=(R.V>0)===!A.isN;t+=` ${f?'Forward':'Reverse'} bias of ${Math.abs(R.V).toFixed(2)} V separates the quasi-Fermi levels and ${f?'lowers':'raises'} the total band bending to ${Math.abs(R.Vbi0-R.V).toFixed(2)} eV, ${f?'narrowing':'widening'} both depletion regions.`}
   }else{
     const c=A.isN?'electrons':'holes';
-    if(R.homo)t=`Both sides are ${A.type}-type ${nm(A.mat)} with different doping. ${c[0].toUpperCase()+c.slice(1)} diffuse from the heavily doped side into the lightly doped side. That builds up an accumulation layer about a Debye length thick on the light side and depletes the heavy side slightly. The step is only ${d} eV, about kT·ln(N₁/N₂). Majority carriers cross it freely, so the junction is ohmic, but it repels minority carriers. That is the back-surface field used in solar cells.`;
-    else{t=`Both sides are ${A.type}-type, so this is an isotype heterojunction. Majority ${c} move from the ${hi} side (higher Fermi level for electrons, lower for holes) to the ${lo} side until E_F lines up. One side depletes (${vA.toFixed(2)} eV of bending on the left, ${vB.toFixed(2)} eV on the right) and the other gathers an accumulation layer against the interface. `;
+    if(R.homo)t=`Both sides are ${A.type}-type ${nm(A.mat)} with different doping. ${c[0].toUpperCase()+c.slice(1)} diffuse from the heavily doped side into the lightly doped side. That builds up an accumulation layer about a Debye length thick on the light side and depletes the heavy side slightly. The step is only ${d} eV, about kT·ln(N₁/N₂). Majority carriers cross it freely, so the junction is ohmic, but it repels minority carriers. That is the back-surface field used in solar cells, and the same step sits between a heavily doped substrate and a lightly doped drift layer in power devices.`;
+    else{t=`Both sides are ${A.type}-type, so this is an isotype heterojunction. Majority ${c} move from the ${A.isN?hi:lo} side to the ${A.isN?lo:hi} side (${A.isN?'electrons leave the side with the higher Fermi level':'holes leave the side with the lower Fermi level'}) until E_F lines up. One side depletes (${vA.toFixed(2)} eV of bending on the left, ${vB.toFixed(2)} eV on the right) and the other gathers an accumulation layer against the interface. `;
       const ns=R.nsA+R.nsB,ps=R.psA+R.psB;
       if(A.isN&&ns>1e10)t+=`About ${sci(ns)} electrons/cm² collect in the notch on the narrow-gap side, the same mechanism that forms the two-dimensional electron gas in a modulation-doped HEMT. `;
       if(!A.isN&&ps>1e10)t+=`About ${sci(ps)} holes/cm² collect at the interface. `;
@@ -1767,10 +1798,10 @@ function jupdate(){
   for(const z of [1,10,100])$('jZ'+z).setAttribute('aria-pressed',JS.zoom===z);
   $('jf2cap').innerHTML=`Fig. 2 · Junction<small>${R.eq?'thermal equilibrium, E<sub>F</sub> flat':(Math.abs(JS.V).toFixed(2)+' V junction bias, quasi-Fermi levels split')}</small>`;
   $('jf3sub').textContent=Math.abs(R.sigma)>1e-12?'interface sheet charge drawn schematically':'';
-  $('jf1').innerHTML=jdrawBefore(R);$('jf2').innerHTML=jdrawAfter(R);$('jf3').innerHTML=jdrawCharge(R);$('jf4').innerHTML=jdrawField(R);
   $('jtser').textContent=JS.tser>=1?JS.tser+' µm':(JS.tser*1000)+' nm';
   const key=JSON.stringify([JS.A,JS.B,JS.sig,JS.tser]);if(key!==ivKey){ivKey=key;ivCache=jIV(R)}
-  const I=ivCache;I.op=I.at(JS.V);I.opV=JS.V+I.op.J*I.Rs;$('jf5').innerHTML=jdrawIV(R,I);
+  const I=ivCache;I.op=I.at(JS.V);I.opV=JS.V+I.op.J*I.Rs;
+  $('jf1').innerHTML=jdrawBefore(R);$('jf2').innerHTML=jdrawAfter(R,I.op);$('jf3').innerHTML=jdrawCharge(R);$('jf4').innerHTML=jdrawField(R);$('jf5').innerHTML=jdrawIV(R,I);
   $('jivLog').setAttribute('aria-pressed',JS.ivLog);$('jivLin').setAttribute('aria-pressed',!JS.ivLog);
   jreadouts(R,I);jstory(R);
 }
@@ -2723,7 +2754,21 @@ function hdrawBands(R,Rab){
   else o+=T(px1-30,y(R.EFn[S.nn-1])+14,sb('E','F'),'halo','end');
   if(w){const lab=(s,nm,dir)=>{const z=S.z[s.psi2.indexOf(Math.max(...s.psi2))];if(z<v0||z>v1)return '';return T(xs(z)+4,y(s.E)+(dir>0?-4:12),nm,'m stlab halo')};
     shownE.slice(0,3).forEach((s,i)=>{o+=lab(s,'e'+(i+1),1)});shownH.forEach((s,i)=>{o+=lab(s,'hh'+(i+1),-1)})}
-  return svg(W,H,o,'Self-consistent band diagram of the heterostructure');
+  let strip=null;
+  if(R.info.mode==='oled'&&R.dd){const d=R.dd,Jt=Math.abs(d.J);
+    if(Math.abs(R.V)<1e-9&&!R.cfg.sun)strip=flowStrip(px0,px1,[],'');
+    else{const za=S.z[d.ia],zb=S.z[d.ib],a=Math.max(za,v0),b=Math.min(zb,v1),K=7,re=[],rh=[];let mx=0;
+      const at=z=>{let e=d.ia;while(e<d.ib-1&&S.z[e+1]<z)e++;return e-d.ia};
+      for(let k=0;k<K;k++)mx=Math.max(mx,Math.abs(d.Jn[at(a+(k+0.5)*(b-a)/K)]),Math.abs(d.Jp[at(a+(k+0.5)*(b-a)/K)]));
+      for(let k=0;k<K&&b>a&&mx>0;k++){const zc=a+(k+0.5)*(b-a)/K,i=at(zc),hw=0.36*(xs(b)-xs(a))/K,X=xs(zc),Jn=d.Jn[i],Jp=d.Jp[i];
+        if(Math.abs(Jn)/mx>1e-4)re.push({a:X-hw,b:X+hw,dir:Jn>0?-1:1,w:flowW(Math.abs(Jn)/mx),dash:Math.abs(Jn)/mx<1e-3});
+        if(Math.abs(Jp)/mx>1e-4)rh.push({a:X-hw,b:X+hw,dir:Jp>0?1:-1,w:flowW(Math.abs(Jp)/mx),dash:Math.abs(Jp)/mx<1e-3})}
+      strip=flowStrip(px0,px1,[{c:'e',segs:re},{c:'h',segs:rh}],`total |J| = ${fmtJ(Jt)}${R.cfg.sun?' · photocurrent':''}`)}}
+  else if(R.info.mode==='unipolar'){
+    if(Math.abs(R.V)<1e-9)strip=flowStrip(px0,px1,[],'');
+    else if(R._J!=null){const tw=R.twin||R.win,a=Math.max(v0,tw?tw.za-15:v0),b=Math.min(v1,tw?tw.zb+15:v1);
+      strip=flowStrip(px0,px1,Math.abs(R._J)>1e-30?[{c:'e',segs:[{a:xs(a),b:xs(b),dir:R._J>0?-1:1,w:4}]}]:[],`electrons tunneling · |J| = ${fmtJ(R._J)}`)}}
+  return flowWrap(W,H,o,'Self-consistent band diagram of the heterostructure',strip);
 }
 
 /* ---------- Fig 3: densities ---------- */
@@ -3013,6 +3058,8 @@ function hupdateNow(){
       $('hf5kv').innerHTML=kvs([['Total ∫R dz',`${sci(tot)} cm⁻² s⁻¹`],['Recombination current q∫R dz',`${sci(tot*Q)} A/cm²`],['Peak',`${sci(r.pk)} cm⁻³ s⁻¹ at z = ${r.zp.toFixed(1)} nm`]].concat(top2.map(([v,i])=>[`Share in layer ${i+1} (${layerLabel(HSt.layers[i]).split(' · ')[0]})`,`${(100*v/tot).toFixed(1)} %`])))}
     else if(k==='JVo'){runSweep('JVo',R);drawF5Sweep()}
     else if(k==='JVs'){runSweep('JVs',R);drawF5Sweep()}
+    if(R.info.mode==='unipolar'&&R._J==null&&Math.abs(R.V)>1e-9){const tr=transmission(R,null,Math.max(R.EL,R.ER)+0.35,900);R._J=tsuEsaki(R,tr)}
+    if(R.info.mode==='unipolar')$('hf2').innerHTML=hdrawBands(R,Rab);
     else if(k==='gen'){$('hf5').innerHTML=hdrawGen(R);const g=R.gen,r=recInt(R);const par=g?g.abs.map((a,i)=>[a,i]).filter(([a,i])=>!g.gen[i]&&a>1e-5).sort((a,b)=>b[0]-a[0]).slice(0,2):[];
       $('hf5kv').innerHTML=kvs([['Photons in (above 1 eV)',g?`${(g.inc*1e3).toFixed(1)} mA/cm² equivalent`:'—'],['Absorbed in active layers',g?`${(g.Jgen*1e3).toFixed(2)} mA/cm²`:'—'],['Escaped (reflected out or transmitted)',g?`${((g.refl+g.trans)*1e3).toFixed(2)} mA/cm²`:'—']].concat(par.map(([a,i])=>[`Parasitic: layer ${i+1} (${layerLabel(HSt.layers[i]).split(' · ')[0]})`,`${(a*1e3).toFixed(2)} mA/cm²`])).concat([['Recombination q∫R dz',`${(r.tot*Q*1e3).toFixed(2)} mA/cm²`]]))}}
   hreadouts(R);
@@ -3064,6 +3111,10 @@ const TAKE={
 'p-Ge / n-Si · staggered':'Both band edges step the same way (Type II), separating electrons and holes across the interface. Compare ΔE_C and ΔE_V in Fig. 2.',
 'n-InAs / p-GaSb · broken gap':'One conduction band lies below the other valence band, so electrons and holes face each other with no gap between. See Fig. 3.',
 'Si p⁺⁺–n⁺⁺ Esaki tunnel diode':'Degenerate doping makes a 4 nm junction that electrons tunnel straight through, giving a current peak and negative resistance. See Fig. 5.',
+'Si p⁺–p · back-surface field':'Two p-type Si layers make a 0.18 eV step that holes cross freely but that turns back minority electrons: the Al back-surface field. See the step in Fig. 2.',
+'P-AlGaAs / p-GaAs · hole barrier':'Both sides p-type, but the offsets leave a small hole spike and a 0.21 eV wall for electrons, as in a laser\'s p-cladding. Look at x = 0 in Fig. 2.',
+'4H-SiC n⁺–n⁻ · drift layer':'A 10⁴ doping step in SiC: the junction between a power device\'s n⁺ substrate and its lightly doped drift layer. Fig. 5 is nearly linear.',
+'p⁺⁺-GaN / p-GaN · Mg contact layer':'Mg ionizes poorly, so ten times more Mg gives only a 0.07 eV step in GaN. Compare the ionized fractions in the readouts.',
 'ITO / p-Si heterojunction':'Degenerate ITO behaves almost like a metal, so all the band bending falls in the silicon. Compare the two sides in Fig. 2.',
 'ITO / p⁺⁺-Si tunnel recombination junction':'Both sides degenerate: electrons tunnel straight into the Si valence band, so current passes either way with little loss. See Fig. 5.'},
 'tab-mos':{
@@ -3230,6 +3281,35 @@ b:`<p>Dope both sides of a silicon p–n junction so heavily (2×10²⁰ cm⁻³
 a:`<p>E<sub>F</sub> lies ≈0.11 eV inside each band. With W ≈ 4 nm the peak field is ≈6×10⁶ V/cm. The band-to-band current uses Kane's expression, J ∝ ℰ·exp(−π m<sub>r</sub><sup>1/2</sup>E<sub>g</sub><sup>3/2</sup>/(2√2 qħℰ))·D, where D = ∫[f<sub>n</sub> − f<sub>p</sub>]dE runs over the overlap window between the n-side E<sub>C</sub> and the p-side E<sub>V</sub>. D grows linearly at small forward bias and falls to zero as the overlap closes near V ≈ (E<sub>Fn</sub> − E<sub>C</sub>) + (E<sub>V</sub> − E<sub>Fp</sub>) ≈ 0.23 V. That gives the peak and the valley. In reverse, D grows without bound (backward diode).</p>
 <p>Si is indirect, so the transition needs a phonon (or impurity scattering). Kane's direct-gap formula overestimates the rate by orders of magnitude; the model applies a ×10⁻² factor as a crude phonon-assisted correction, giving a peak of ≈7×10³ A/cm². Measured Si Esaki diodes span 10²–10⁵ A/cm² depending on doping abruptness. The model also omits the excess (trap-assisted) current that fills the real valley and band-gap narrowing at 10²⁰ cm⁻³. Series thickness is set to 0.5 µm so that R<sub>s</sub> does not mask the NDR.</p>
 <p class="lk"><b>Explore:</b> Lower both dopings to 5×10¹⁹: the overlap vanishes, the peak disappears, and only reverse Zener tunneling remains. Try Ge (smaller gap, lighter m<sub>r</sub>), Esaki's original material.</p>`},
+'Si p⁺–p · back-surface field':{
+b:`<p>An <b>isotype</b> junction joins two layers of the <i>same</i> doping type. Here both sides are p-type silicon: a heavily Al-doped p⁺ layer (10¹⁹ cm⁻³) against a lightly B-doped wafer (10¹⁶ cm⁻³). Holes diffuse from the p⁺ side into the wafer and pile up in a thin accumulation layer, leaving a small step of about 0.18 eV in the bands.</p>
+<p>Holes, the majority carriers, cross the step freely, so the junction conducts in both directions (it is ohmic). Minority electrons in the wafer are pushed back by the same step. That keeps them away from the rear metal contact, where they would recombine. This is the aluminum <b>back-surface field</b> (Al-BSF) that was on the back of almost every silicon solar cell for decades.</p>
+<p class="lk"><b>Look for:</b> The small step in Fig. 2, and the thin sheet of accumulated holes in Fig. 3.</p>
+<p class="lk"><b>Try:</b> Apply bias either way. The I–V in Fig. 5 is nearly a straight line, and the arrows above Fig. 2 show holes carrying almost all the current.</p>`,
+a:`<p>qΔφ = kT ln(N<sub>A</sub><sup>+</sup>/N<sub>A</sub>) + small Fermi–Dirac correction = 0.182 eV, against kT ln 10³ = 0.179 eV. The step falls mostly in the lightly doped side (0.155 vs 0.027 eV), where the accumulated sheet (≈1.1×10¹² cm⁻²) is screened over the extrinsic Debye length L<sub>D</sub> ≈ 41 nm. The heavy side depletes over ≈2 nm. For minority electrons arriving from the base, the p⁺ layer acts as a reflector. In the simplest analysis S<sub>eff</sub> ≈ (N<sub>A</sub>/N<sub>A</sub><sup>+</sup>)(D<sup>+</sup>/L<sup>+</sup>)coth(W<sup>+</sup>/L<sup>+</sup>), where D<sup>+</sup>, L<sup>+</sup> and W<sup>+</sup> are the electron diffusivity, diffusion length and thickness of the p⁺ layer.</p>
+<p>In production the p⁺ layer forms when screen-printed Al paste is fired at ≈800 °C. Si dissolves into the Al melt and regrows Al-doped on cooling (Al solubility in Si is a few 10¹⁸ cm⁻³ at these temperatures), giving S<sub>eff</sub> of a few hundred cm/s. That limited V<sub>oc</sub> to ≈640 mV, so the industry replaced Al-BSF with PERC around 2016–2020: a dielectric rear passivation with local contacts. The model omits band-gap narrowing in the p⁺ layer, which raises n<sub>i,eff</sub>² and weakens the field.</p>
+<p class="lk"><b>Explore:</b> Raise the wafer doping to 10¹⁷ and watch the step shrink as kT ln(N<sub>1</sub>/N<sub>2</sub>). Compare the accumulated charge with the n⁺–n exemplar.</p>`},
+'P-AlGaAs / p-GaAs · hole barrier':{
+b:`<p>A p-type isotype <b>heterojunction</b>: heavily doped wide-gap Al<sub>0.3</sub>Ga<sub>0.7</sub>As against more lightly doped GaAs. Holes move from the AlGaAs into the GaAs and accumulate at the interface. The band offsets leave a small spike in the valence band (≈0.04 eV) that holes must climb, and a much larger 0.21 eV wall in the conduction band.</p>
+<p>That wall is the point. In a GaAs laser or LED the p-AlGaAs cladding layer passes holes into the active region but stops electrons from leaking out of it on the p side, keeping both carriers where they can recombine and emit light.</p>
+<p class="lk"><b>Look for:</b> At x = 0 in Fig. 2 (zoomed 10×), the small valence-band spike and the large conduction-band step. Holes accumulate on the GaAs side (Fig. 3).</p>`,
+a:`<p>ΔE<sub>C</sub> ≈ 0.21 eV, ΔE<sub>V</sub> ≈ 0.16 eV (x = 0.3). The Fermi-level difference (≈0.24 eV) is shared almost equally: the AlGaAs depletes over ≈11 nm (Be is only ≈67 % ionized at 10¹⁸ cm⁻³ in AlGaAs) and the GaAs accumulates ≈9.5×10¹¹ holes/cm² over L<sub>D</sub> ≈ 25 nm. The residual valence-band spike above both bulk valence-band edges is ≈41 meV. Majority transport across it is thermionic emission in series with the bulk, so the junction is weakly nonlinear. At high current densities such spikes contribute a measurable series voltage in laser diodes. That is why p-cladding interfaces are often compositionally graded or carbon-doped to ≥10¹⁹ cm⁻³ to thin the spike.</p>
+<p>For electrons (minority here), the 0.21 eV conduction-band step gives a heterobarrier reflection of order exp(−ΔE<sub>C</sub>/kT) ≈ 3×10⁻⁴ for thermal leakage. That is why AlGaAs claddings, and the AlGaN electron-blocking layer in nitride LEDs, are effective. Compare the N–n version (electron accumulation, modulation doping) in the N-AlGaAs / n-GaAs exemplar.</p>
+<p class="lk"><b>Explore:</b> Raise the AlGaAs doping to 10¹⁹ and watch the spike thin. Change the AlGaAs χ (Advanced) to move ΔE<sub>V</sub> and see how quickly the spike, and the series resistance, grow.</p>`},
+'4H-SiC n⁺–n⁻ · drift layer':{
+b:`<p>Every silicon carbide power transistor and diode is built on this isotype junction: a heavily nitrogen-doped n⁺ substrate (10¹⁹ cm⁻³) under a lightly doped n⁻ <b>drift layer</b> (10¹⁵ cm⁻³) grown on top. The thick, lightly doped drift layer is what holds off high voltages (over 1000 V) when the device is off. The n⁺ substrate gives a low-resistance path to the back contact.</p>
+<p>Electrons spill from the n⁺ side into the drift layer and form an accumulation layer; the step in the bands is about 0.24 eV. Majority electrons cross it freely in either direction.</p>
+<p class="lk"><b>Look for:</b> The step in Fig. 2 and the accumulation layer about 0.1 µm thick in Fig. 3. The I–V in Fig. 5 is nearly linear.</p>`,
+a:`<p>qΔφ = kT ln(10⁴) ≈ 0.24 eV. The N donor in 4H-SiC (hexagonal site, E<sub>D</sub> ≈ 61 meV in this model) is 99.9 % ionized at 10¹⁵ and fully ionized above the Mott density at 10¹⁹ cm⁻³. The accumulation layer extends over L<sub>D</sub> ≈ 0.12 µm. A real 4H-SiC N donor also occupies a cubic site (E<sub>D</sub> ≈ 0.12 eV), and the two-site statistics are not modeled.</p>
+<p>The drift-layer design follows from the critical field ℰ<sub>c</sub> ≈ 2.5–3 MV/cm, about 10× that of Si. The one-sided breakdown voltage V<sub>B</sub> ≈ ε<sub>s</sub>ℰ<sub>c</sub>²/2qN<sub>D</sub> lets a 1.2 kV device use ≈10 µm at ~10¹⁶ cm⁻³ instead of ≈100 µm of Si. The specific on-resistance R<sub>on,sp</sub> = 4V<sub>B</sub>²/(ε<sub>s</sub>μ<sub>n</sub>ℰ<sub>c</sub>³) is Baliga's unipolar limit. Production epiwafers insert an n⁺ "buffer" (~10¹⁸ cm⁻³) between substrate and drift layer to convert basal-plane dislocations and to recombine holes before they reach the substrate, which suppresses bipolar degradation. Here, the high–low step is ohmic for electrons and reflects minority holes back into the drift region.</p>
+<p class="lk"><b>Explore:</b> Lower the drift doping to 10¹⁴ and follow the step and L<sub>D</sub>. Compare R<sub>s</sub> with the Si n⁺–n exemplar: lower mobility, but the drift layer would be ten times thinner.</p>`},
+'p⁺⁺-GaN / p-GaN · Mg contact layer':{
+b:`<p>GaN LEDs and laser diodes put a very heavily Mg-doped p⁺⁺ layer, only 10–20 nm thick, on top of the p-GaN, right under the metal contact. Here it is joined to ordinary p-GaN as an isotype junction.</p>
+<p>Because magnesium holds its hole so tightly, a tenfold increase in Mg (10¹⁹ → 10²⁰ cm⁻³) gives only about ten times more holes, and the step between the layers is just 0.07 eV. The p⁺⁺ cap is not there to make a big step. It is there so that the metal–semiconductor depletion region at the contact becomes thin enough for holes to tunnel through it.</p>
+<p class="lk"><b>Look for:</b> The ionized fractions in the readouts (≈17 % and ≈13 %), and the very thin accumulation layer in Fig. 3 (zoomed 10×).</p>`,
+a:`<p>Mg in GaN (E<sub>A</sub> ≈ 0.17 eV) is far from the Mott density even at 10²⁰ cm⁻³ for the heavy GaN hole mass (N<sub>M</sub> ≈ 2×10²⁰ cm⁻³ here, with a partly reduced E<sub>A</sub> at 10²⁰). Ionization stays at ≈13–17 %, giving p ≈ 1.3×10¹⁸ and 1.7×10¹⁹ cm⁻³ and a step of only ≈0.07 eV ≈ kT ln(p<sub>1</sub>/p<sub>2</sub>). Both screening lengths are a few nm.</p>
+<p>Real Mg doping above ~3×10¹⁹ cm⁻³ suffers self-compensation (nitrogen vacancies, Mg-related complexes), inversion domains and a falling hole concentration, none of which the model includes. The measured p in a 10²⁰ cm⁻³ layer is often <i>lower</i> than in a 2×10¹⁹ layer. The practical value of the p⁺⁺ cap lies in contact physics: a thinner metal-side depletion (thermionic-field emission, cf. E<sub>00</sub> in the contact tab), defect-assisted tunneling, and the Ni/Au anneal chemistry (NiO, Ga vacancies at the surface). Pair this exemplar with Ni / p-GaN:Mg on the contact tab.</p>
+<p class="lk"><b>Explore:</b> Push the cap to 10²¹ cm⁻³ and watch E<sub>A</sub> collapse and ionization jump as N approaches the Mott density, a regime real GaN never reaches because of compensation.</p>`},
 'ITO / p-Si heterojunction':{
 b:`<p>Indium tin oxide (ITO) is a transparent conductor: a wide-gap oxide (3.6 eV) doped so heavily with tin that it conducts almost like a metal while staying clear to visible light. It is the transparent electrode on touchscreens, LCDs, OLEDs and many solar cells.</p>
 <p>Joined to lightly doped p-Si, ITO behaves much like a metal contact: it has so many electrons that its own band bending is negligible, and the whole depletion region (≈0.26 µm) forms in the silicon. The result is a rectifying junction, and in the 1970s–80s ITO/Si junctions were studied as simple solar cells.</p>
