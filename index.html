@@ -401,7 +401,7 @@ svg .efc{fill:var(--ef)}
     <legend><span class="adv">Interface &amp; bias</span><span class="basic-only">Operating point</span></legend>
     <div class="ctl adv">
       <div class="row"><label for="jSig">Interface sheet charge σ<sub>int</sub></label><output id="jSigO"></output></div>
-      <input type="range" id="jSig" min="-30" max="30" step="0.1">
+      <input type="range" id="jSig" min="-80" max="80" step="0.1">
       <span class="hint">Fixed charge at the interface, e.g. polarization charge in AlGaN/GaN (≈ +1×10¹³ q/cm²). Leave at 0 for the Anderson model.</span>
     </div>
     <div class="ctl">
@@ -1342,6 +1342,7 @@ const JPRE=[
  ['P-AlGaAs / p-GaAs · hole barrier',{A:['AlGaAs','p','Be',18],B:['GaAs','p','Be',16.5],zoom:10}],
  ['4H-SiC n⁺–n⁻ · drift layer',{A:['4H-SiC','n','N',19],B:['4H-SiC','n','N',15]}],
  ['p⁺⁺-GaN / p-GaN · Mg contact layer',{A:['GaN','p','Mg',20],B:['GaN','p','Mg',19],zoom:10}],
+ ['GaN / AlN · polarization 2D hole gas',{A:['GaN','n','Si',16],B:['AlN','p','Mg',13],sig:-54,zoom:100}],
  ['ITO / p-Si heterojunction',{A:['ITO','n','Sn',20.7],B:['Si','p','B',16]}],
  ['ITO / p⁺⁺-Si tunnel recombination junction',{A:['ITO','n','Sn',20.7],B:['Si','p','B',20.3],lin:true,tser:0.5,win:[-1.0,0.3]}]
 ];
@@ -1430,6 +1431,7 @@ function jcompute(){
   const acc=(F,P,s,c)=>{let t=0;const bulk=c==='n'?F.nAt(0):F.pAt(0);
     for(let i=1;i<P.X.length;i++){const f=u=>Math.max((c==='n'?F.nAt(u):F.pAt(u))-bulk,0);t+=(f(P.U[i])+f(P.U[i-1]))/2*(P.X[i]-P.X[i-1])}return t};
   const nsA=A.isN?acc(FA,PA,A,'n'):0,nsB=B.isN?acc(FB,PB,B,'n'):0,psA=A.isN?0:acc(FA,PA,A,'p'),psB=B.isN?0:acc(FB,PB,B,'p');
+  const miA=acc(FA,PA,A,A.isN?'p':'n'),miB=acc(FB,PB,B,B.isN?'p':'n'),pinv=(A.isN?miA:0)+(B.isN?miB:0),ninv=(A.isN?0:miA)+(B.isN?0:miB);
   const EvA=EcA-A.Eg,EvB=EcB-B.Eg,EvA0=EcA0-A.Eg,EvB0=EcB0-B.Eg;
   const cSpike=Math.max(EcA0,EcB0)-Math.max(EcA,EcB);
   const vSpike=Math.min(EvA,EvB)-Math.min(EvA0,EvB0);
@@ -1439,7 +1441,7 @@ function jcompute(){
   const invA=eq&&!aniso&&(A.isN?FA.pAt(I.uA)>FA.nAt(I.uA):FA.nAt(I.uA)>FA.pAt(I.uA));
   const invB=eq&&!aniso&&(B.isN?FB.pAt(I.uB)>FB.nAt(I.uB):FB.nAt(I.uB)>FB.pAt(I.uB));
   return {A,B,homo,aniso,sigma,Vbi0,vlo,vhi,V,eq,FA,FB,I,WA,WB,L,PA,PB,EcA,EcB,EcA0,EcB0,EvA,EvB,EvA0,EvB0,
-    EA0,EB0,QA,QB,nsA,nsB,psA,psB,cSpike,vSpike,al,degAcc:satA||satB,invA,invB};
+    EA0,EB0,QA,QB,nsA,nsB,psA,psB,pinv,ninv,cSpike,vSpike,al,degAcc:satA||satB,invA,invB};
 }
 
 /* ---------- I–V ---------- */
@@ -1733,6 +1735,8 @@ function jreadouts(R,I){
   const ns=R.nsA+R.nsB,ps=R.psA+R.psB;
   if(ns>1e9)items.push(['Accumulated electrons n_s',`${sci(ns)} cm⁻²`]);
   if(ps>1e9)items.push(['Accumulated holes p_s',`${sci(ps)} cm⁻²`]);
+  if(Math.abs(JS.V)<1e-9&&R.pinv>1e9)items.push(['Inversion-layer holes p_s',`${sci(R.pinv)} cm⁻²`]);
+  if(Math.abs(JS.V)<1e-9&&R.ninv>1e9)items.push(['Inversion-layer electrons n_s',`${sci(R.ninv)} cm⁻²`]);
   items.push(['Left bulk: E_F − E_V · ionized',`${A.EF.toFixed(3)} eV · ${(A.fion*100).toFixed(A.fion>0.995?2:1)} %`]);
   items.push(['Right bulk: E_F − E_V · ionized',`${B.EF.toFixed(3)} eV · ${(B.fion*100).toFixed(B.fion>0.995?2:1)} %`]);
   $('jkv').innerHTML=items.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
@@ -3124,6 +3128,7 @@ const TAKE={
 'P-AlGaAs / p-GaAs · hole barrier':'Both sides p-type, but the offsets leave a small hole spike and a 0.21 eV wall for electrons, as in a laser\'s p-cladding. Look at x = 0 in Fig. 2.',
 '4H-SiC n⁺–n⁻ · drift layer':'A 10⁴ doping step in SiC: the junction between a power device\'s n⁺ substrate and its lightly doped drift layer. Fig. 5 is nearly linear.',
 'p⁺⁺-GaN / p-GaN · Mg contact layer':'Mg ionizes poorly, so ten times more Mg gives only a 0.07 eV step in GaN. Compare the ionized fractions in the readouts.',
+'GaN / AlN · polarization 2D hole gas':'The negative polarization sheet at Ga-face GaN on AlN pulls ≈5×10¹³ holes/cm² to the interface, even in n-type GaN. Compare Figs. 2 and 4.',
 'ITO / p-Si heterojunction':'Degenerate ITO behaves almost like a metal, so all the band bending falls in the silicon. Compare the two sides in Fig. 2.',
 'ITO / p⁺⁺-Si tunnel recombination junction':'Both sides degenerate: electrons tunnel straight into the Si valence band, so current passes either way with little loss. See Fig. 5.'},
 'tab-mos':{
@@ -3320,6 +3325,14 @@ b:`<p>GaN LEDs and laser diodes put a very heavily Mg-doped p⁺⁺ layer, only 
 a:`<p>Mg in GaN (E<sub>A</sub> ≈ 0.17 eV) is far from the Mott density even at 10²⁰ cm⁻³ for the heavy GaN hole mass (N<sub>M</sub> ≈ 2×10²⁰ cm⁻³ here, with a partly reduced E<sub>A</sub> at 10²⁰). Ionization stays at ≈13–17 %, giving p ≈ 1.3×10¹⁸ and 1.7×10¹⁹ cm⁻³ and a step of only ≈0.07 eV ≈ kT ln(p<sub>1</sub>/p<sub>2</sub>). Both screening lengths are a few nm.</p>
 <p>Real Mg doping above ~3×10¹⁹ cm⁻³ suffers self-compensation (nitrogen vacancies, Mg-related complexes), inversion domains and a falling hole concentration, none of which the model includes. The measured p in a 10²⁰ cm⁻³ layer is often <i>lower</i> than in a 2×10¹⁹ layer. The practical value of the p⁺⁺ cap lies in contact physics: a thinner metal-side depletion (thermionic-field emission, cf. E<sub>00</sub> in the contact tab), defect-assisted tunneling, and the Ni/Au anneal chemistry (NiO, Ga vacancies at the surface). Pair this exemplar with Ni / p-GaN:Mg on the contact tab.</p>
 <p class="lk"><b>Explore:</b> Push the cap to 10²¹ cm⁻³ and watch E<sub>A</sub> collapse and ionization jump as N approaches the Mott density, a regime real GaN never reaches because of compensation.</p>`},
+'GaN / AlN · polarization 2D hole gas':{
+b:`<p>This is the heterojunction inside the AlN/GaN p-channel HEMT on the Heterostructures tab, shown here on its own. GaN (left) sits on top of AlN (right), and neither is intentionally doped. Real "undoped" GaN still has about 10¹⁶ cm⁻³ stray donors, so it is mildly n-type. The AlN is effectively an insulator.</p>
+<p>The key ingredient is the <b>polarization sheet charge</b>, about −5.4×10¹³ charges/cm², that appears where Ga-face GaN meets AlN. That negative sheet pulls holes to the interface even though the GaN is n-type. The bands bend upward by more than 3.6 eV until the valence band crosses the Fermi level and an <b>inversion layer of holes</b>, a 2D hole gas of about 5×10¹³ cm⁻², forms right at the interface.</p>
+<p class="lk"><b>Look for:</b> In Fig. 2 (zoomed 100×) the GaN valence band bends up to touch E<sub>F</sub> at x = 0. In Fig. 4 the field jumps by σ/ε at the interface.</p>
+<p class="lk"><b>Try (Advanced):</b> Drag the interface-charge slider from −54 toward 0. The hole gas shrinks and vanishes, and without polarization the bending moves into the AlN.</p>`,
+a:`<p>Gauss's law at the interface, ε<sub>B</sub>ℰ<sub>B</sub> − ε<sub>A</sub>ℰ<sub>A</sub> = σ<sub>int</sub>, with σ<sub>int</sub>/q = −5.4×10¹³ cm⁻², requires ≈5.4×10¹³ cm⁻² of compensating positive charge. The lightly doped AlN cannot supply it, and the GaN depletion charge can supply only qN<sub>D</sub>W ≈ 6×10¹¹ cm⁻² before the GaN valence band reaches E<sub>F</sub>. The rest must be holes. The exact Poisson integral gives a hole inversion sheet p<sub>s</sub> ≈ 5.6×10¹³ cm⁻² with ℰ ≈ 11 MV/cm at the interface, and the bands bend by ≈3.6 eV over a ≈0.6 µm depletion region in the UID GaN. Chaudhuri <i>et al.</i> measured 4.7–5.4×10¹³ cm⁻² in 13 nm undoped GaN/AlN, consistent with this.</p>
+<p>The semi-infinite geometry exaggerates one thing. Here the holes come from thermal equilibrium with a thick n-type GaN, which requires the 0.6 µm depletion region. In the device, the GaN is only ≈13 nm thick, and the holes come from the source contact and the surface (or gate), so no thick depletion region forms. The heterostructure tab models that geometry. Holes are classical here: the 11 MV/cm field confines them within ≈1 nm, where the real heavy-hole subbands would spread the charge over ≈2 nm. The AlN is entered as 10¹³ cm⁻³ Mg, the lowest the slider allows, to stand in for semi-insulating AlN; it carries essentially no charge (0.06 eV of bending). The interface sheet follows Bernardini, Fiorentini &amp; Vanderbilt spontaneous polarizations plus the piezoelectric term of GaN compressively strained on AlN.</p>
+<p class="lk"><b>Explore:</b> Set σ = −30×10¹² (roughly an Al<sub>0.55</sub>Ga<sub>0.45</sub>N barrier) and p<sub>s</sub> drops to ≈3×10¹³. Set σ = 0 and the GaN barely bends while the AlN takes the whole 3.6 eV work-function difference. Flip the sign (+54) to see the electron-gas case, as at an AlN-on-GaN interface.</p>`},
 'ITO / p-Si heterojunction':{
 b:`<p>Indium tin oxide (ITO) is a transparent conductor: a wide-gap oxide (3.6 eV) doped so heavily with tin that it conducts almost like a metal while staying clear to visible light. It is the transparent electrode on touchscreens, LCDs, OLEDs and many solar cells.</p>
 <p>Joined to lightly doped p-Si, ITO behaves much like a metal contact: it has so many electrons that its own band bending is negligible, and the whole depletion region (≈0.26 µm) forms in the silicon. The result is a rectifying junction, and in the 1970s–80s ITO/Si junctions were studied as simple solar cells.</p>
