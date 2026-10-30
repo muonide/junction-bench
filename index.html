@@ -246,11 +246,11 @@ svg .efc{fill:var(--ef)}
     <div class="ctl"><select id="semiSel" aria-label="Semiconductor"></select></div>
     <div class="ctl">
       <div class="row"><label for="Eg">Band gap E<sub>g</sub> <span class="tag" id="EgTag"></span></label><output id="EgO"></output></div>
-      <input type="range" id="Eg" min="0.2" max="4.0" step="0.01">
+      <input type="range" id="Eg" min="0.2" max="9.0" step="0.01">
     </div>
     <div class="ctl">
       <div class="row"><label for="chi">Electron affinity qχ <span class="tag" id="chiTag"></span></label><output id="chiO"></output></div>
-      <input type="range" id="chi" min="3.0" max="5.0" step="0.01">
+      <input type="range" id="chi" min="0.8" max="5.2" step="0.01">
     </div>
   </fieldset>
 
@@ -263,7 +263,7 @@ svg .efc{fill:var(--ef)}
     <div class="ctl"><label for="dopSel">Dopant · ionization energy</label><select id="dopSel"></select></div>
     <div class="ctl">
       <div class="row"><label for="logN" id="logNLbl">Concentration N<sub>D</sub></label><output id="logNO"></output></div>
-      <input type="range" id="logN" min="13" max="20.7" step="0.05">
+      <input type="range" id="logN" min="13" max="21.3" step="0.05">
     </div>
     <div class="ctl">
       <div class="row"><label for="EF">Fermi level E<sub>F</sub> − E<sub>V</sub></label><output id="EFO"></output></div>
@@ -787,7 +787,9 @@ const SEMIS={
  GaAs:{chi:4.07,Eg:1.424,er:12.9,Nc:4.7e17,Nv:9.0e18,me:0.067,mh:0.45,mun:8500,mup:400,rn:0.068,rp:0.62,cnl:0.5,n:{Si:0.0058,Se:0.0059,Te:0.0058},p:{Be:0.028,Zn:0.031,C:0.027}},
  InP:{chi:4.38,Eg:1.344,er:12.5,Nc:5.7e17,Nv:1.1e19,me:0.08,mh:0.6,mun:5400,mup:200,rn:0.08,rp:0.6,cnl:0.9,n:{Si:0.0057,S:0.0057,Sn:0.0057},p:{Zn:0.035,Be:0.03}},
  GaN:{chi:4.1,Eg:3.4,er:8.9,Nc:2.3e18,Nv:4.6e19,me:0.2,mh:1.0,mun:1000,mup:30,rn:0.22,rp:0.8,cnl:2.4,n:{Si:0.015,Ge:0.019,O:0.03},p:{Mg:0.17}},
- '4H-SiC':{chi:3.6,Eg:3.26,er:9.7,Nc:1.7e19,Nv:2.5e19,me:0.38,mh:1.0,mun:900,mup:120,rn:1.22,rp:0.91,cnl:1.5,n:{N:0.061,P:0.08},p:{Al:0.20,B:0.30}}
+ '4H-SiC':{chi:3.6,Eg:3.26,er:9.7,Nc:1.7e19,Nv:2.5e19,me:0.38,mh:1.0,mun:900,mup:120,rn:1.22,rp:0.91,cnl:1.5,n:{N:0.061,P:0.08},p:{Al:0.20,B:0.30}},
+ ITO:{chi:5.0,Eg:3.6,er:9,Nc:5.2e18,Nv:2.5e19,me:0.35,mh:1.0,mun:35,mup:1,muFix:true,rn:0.35,rp:1,cnl:4.0,nOnly:true,n:{Sn:0.03,'O vacancy':0.03},p:{'(no p-type ITO)':0.5}},
+ 'Al₂O₃':{chi:1.0,Eg:6.5,er:9,Nc:6.3e18,Nv:2.5e19,me:0.4,mh:4,mun:1e-3,mup:1e-3,muFix:true,rn:0.4,rp:1,cnl:4.1,nOnly:true,noMott:true,n:{'V_O (deep)':3.0},p:{'(no p-type Al₂O₃)':3}}
 };
 const PRESETS=[
  ['Au / n-Si · Schottky',{semi:'Si',type:'n',dopant:'P',logN:16,metal:'Au',pin:1}],
@@ -796,7 +798,9 @@ const PRESETS=[
  ['Pt / p-Si · ohmic',{semi:'Si',type:'p',dopant:'B',logN:16,metal:'Pt',pin:1}],
  ['Au / n⁺ Si · tunneling',{semi:'Si',type:'n',dopant:'P',logN:19.7,metal:'Au',pin:1}],
  ['Au / n-GaAs · pinned',{semi:'GaAs',type:'n',dopant:'Si',logN:17,metal:'Au',pin:0.1}],
- ['Ni / p-GaN:Mg · deep acceptor',{semi:'GaN',type:'p',dopant:'Mg',logN:19,metal:'Ni',pin:1}]
+ ['Ni / p-GaN:Mg · deep acceptor',{semi:'GaN',type:'p',dopant:'Mg',logN:19,metal:'Ni',pin:1}],
+ ['Ag / ITO · degenerate oxide',{semi:'ITO',type:'n',dopant:'Sn',logN:20.5,metal:'Ag',pin:1}],
+ ['Ag / Al₂O₃ · metal–insulator',{semi:'Al₂O₃',type:'n',dopant:'V_O (deep)',logN:16,metal:'Ag',pin:0.69}]
 ];
 const S={metal:'Au',phim:5.1,semi:'Si',chi:4.05,Eg:1.12,type:'n',dopant:'P',logN:16,pin:1,V:0,showVac:true,showCar:true,showEi:false,minor:false,ivLog:true};
 const $=id=>document.getElementById(id);
@@ -813,7 +817,8 @@ const sp=x=>x>30?x:Math.log1p(Math.exp(x));
 /* ---------- physics ---------- */
 function muCT(m,car,N){ // Caughey–Thomas; exact Si parameters, generic form otherwise
   if(m===SEMIS.Si||(m.Eg===1.12&&m.chi===4.05&&m.mun===1400)){const p=car==='n'?[68.5,1414,9.2e16,0.711]:[44.9,470.5,2.23e17,0.719];return p[0]+(p[1]-p[0])/(1+(N/p[2])**p[3])}
-  const mx=car==='n'?m.mun:m.mup,mn=mx/15;return mn+(mx-mn)/(1+(N/1e17)**0.7)}
+  const mx=car==='n'?m.mun:m.mup,mn=mx/15;if(m.muFix)return mx; // degenerate oxides: measured film mobility, already impurity-limited
+  return mn+(mx-mn)/(1+(N/1e17)**0.7)}
 /* Fermi–Dirac integrals (normalized): Aymerich-Humet approximation for F_3/2; F_1/2 is its exact derivative,
    so charge (F_1/2) and the Poisson first integral (F_3/2) stay mutually consistent. */
 const AHb=2.715,AHc=2.207,AHac=3.245**2.207;
@@ -823,7 +828,7 @@ function F12(e){e=Math.max(-700,Math.min(700,e));const t=e-AHb,at=Math.abs(t),s=
 const dF12=e=>(F12(e+1e-4)-F12(e-1e-4))/2e-4;
 /* Mott transition: dopant ionization energy falls as Ed(1 − (N/N_M)^(1/3)) and the impurity band merges with
    the band edge (full ionization) above N_M, from N_M^(1/3)·a_B ≈ 0.26 with a_B = ε_r·0.0529 nm/m*. */
-function ionEnergy(m,type,N,dE){const ms=type==='n'?m.me:m.mh,aB=m.er*0.0529e-7/ms,Nm=(0.26/aB)**3;if(N>=Nm)return null;return dE*(1-Math.cbrt(N/Nm))}
+function ionEnergy(m,type,N,dE){if(m.noMott)return dE;const ms=type==='n'?m.me:m.mh,aB=m.er*0.0529e-7/ms,Nm=(0.26/aB)**3;if(N>=Nm)return null;return dE*(1-Math.cbrt(N/Nm))}
 function bulkState(m,type,N,dE,Eg){
   const dEe=ionEnergy(m,type,N,dE),full=dEe===null,isN=type==='n';
   const f=EF=>{const n=m.Nc*F12((EF-Eg)/VT),p=m.Nv*F12(-EF/VT);
@@ -844,7 +849,7 @@ function chargeFns(m,st,isN,N,eq){
 }
 const screenLen=(m,st,isN,eps)=>Math.sqrt(eps*VT/(Q*(isN?m.Nc*dF12(st.en):m.Nv*dF12(st.ep))));
 function logNforEF(target){
-  const m=SEMIS[S.semi],dE=m[S.type][S.dopant];let lo=13,hi=20.7;
+  const m=SEMIS[S.semi],dE=m[S.type][S.dopant];let lo=13,hi=21.3;
   const g=l=>solveEF(m,S.type,10**l,dE,S.Eg);
   const up=S.type==='n';
   for(let i=0;i<60;i++){const mid=(lo+hi)/2;const e=g(mid);if((e<target)===up)lo=mid;else hi=mid}
@@ -1258,7 +1263,7 @@ function update(){
   $('phim').value=S.phim;$('phimO').textContent=S.phim.toFixed(2)+' eV';
   $('Eg').value=S.Eg;$('EgO').textContent=S.Eg.toFixed(2)+' eV';$('EgTag').textContent=Math.abs(S.Eg-m.Eg)>0.004?'modified':'';
   $('chi').value=S.chi;$('chiO').textContent=S.chi.toFixed(2)+' eV';$('chiTag').textContent=Math.abs(S.chi-m.chi)>0.004?'modified':'';
-  $('typeN').setAttribute('aria-pressed',R.isN);$('typeP').setAttribute('aria-pressed',!R.isN);
+  $('typeN').setAttribute('aria-pressed',R.isN);$('typeP').setAttribute('aria-pressed',!R.isN);$('typeP').disabled=!!m.nOnly;
   $('logNLbl').innerHTML=R.isN?'Concentration N<sub>D</sub>':'Concentration N<sub>A</sub>';
   $('logN').value=S.logN;$('logNO').textContent=sci(R.N)+' cm⁻³';
   $('EF').max=S.Eg.toFixed(3);$('EF').value=R.EF;$('EFO').textContent=R.EF.toFixed(3)+' eV';
@@ -1273,7 +1278,7 @@ function update(){
   readouts(R);story(R);$('f5').innerHTML=drawIV(R,I);ivReadouts(R,I);
   $('ivLog').setAttribute('aria-pressed',S.ivLog);$('ivLin').setAttribute('aria-pressed',!S.ivLog);
 }
-function setSemi(name,keep){S.semi=name;const m=SEMIS[name];if(!keep){S.chi=m.chi;S.Eg=m.Eg}fillDopants();$('semiSel').value=name}
+function setSemi(name,keep){S.semi=name;const m=SEMIS[name];if(!keep){S.chi=m.chi;S.Eg=m.Eg}if(m.nOnly)S.type='n';fillDopants();$('semiSel').value=name}
 function init(){
   $('metalSel').innerHTML=Object.entries(METALS).map(([k,v])=>`<option value="${k}">${k} · ${v.toFixed(2)} eV</option>`).join('')+'<option value="custom">Custom</option>';
   $('semiSel').innerHTML=Object.entries(SEMIS).map(([k,v])=>`<option value="${k}">${k} · Eg ${v.Eg.toFixed(2)} eV, χ ${v.chi.toFixed(2)} eV</option>`).join('');
@@ -1284,7 +1289,7 @@ function init(){
   $('Eg').oninput=e=>{S.Eg=+e.target.value;update()};
   $('chi').oninput=e=>{S.chi=+e.target.value;update()};
   $('typeN').onclick=()=>{S.type='n';S.V=0;fillDopants();update()};
-  $('typeP').onclick=()=>{S.type='p';S.V=0;fillDopants();update()};
+  $('typeP').onclick=()=>{if(SEMIS[S.semi].nOnly)return;S.type='p';S.V=0;fillDopants();update()};
   $('dopSel').onchange=e=>{S.dopant=e.target.value;update()};
   $('logN').oninput=e=>{S.logN=+e.target.value;update()};
   $('EF').oninput=e=>{S.logN=logNforEF(+e.target.value);update()};
@@ -3111,7 +3116,9 @@ const TAKE={
 'Pt / p-Si · ohmic':'A high work-function metal accumulates holes on p-Si: an ohmic contact. Fig. 2 shows the valence band rising to meet E<sub>F</sub>.',
 'Au / n⁺ Si · tunneling':'The same 1.05 eV barrier as Au / n-Si, but only ≈5 nm thick, so electrons tunnel through it and the contact is ohmic. Compare W with the first exemplar.',
 'Au / n-GaAs · pinned':'Interface states pin the Fermi level, so the barrier (0.93 eV) barely depends on the metal. Note the vacuum-level step at the interface in Fig. 2.',
-'Ni / p-GaN:Mg · deep acceptor':'No metal is deep enough for p-GaN, and only ≈13 % of the Mg releases a hole, so the contact strongly rectifies. Check the ionization readout.'},
+'Ni / p-GaN:Mg · deep acceptor':'No metal is deep enough for p-GaN, and only ≈13 % of the Mg releases a hole, so the contact strongly rectifies. Check the ionization readout.',
+'Ag / ITO · degenerate oxide':'ITO is so heavily doped that it behaves almost like a metal: silver forms an accumulation contact with no barrier, and the current is linear. See Fig. 2 and the I–V.',
+'Ag / Al₂O₃ · metal–insulator':'Alumina has no free carriers, so silver faces a ≈3 eV barrier and essentially no current crosses it. This is why Al₂O₃ is a gate dielectric. Compare Fig. 1 with Ag / ITO.'},
 'tab-hj':{
 'Si p–n':'Diffusion across the junction leaves fixed charge that builds a 0.71 V barrier: the diode. Start with Fig. 2, then Fig. 5.',
 'Si p⁺–n one-sided':'Unequal doping puts almost all the depletion in the lightly doped n side. Compare the two charge blocks in Fig. 3.',
@@ -3211,7 +3218,23 @@ b:`<p>Making good contacts to p-type GaN is one of the hard problems behind blue
 <p class="lk"><b>Try:</b> Switch the I–V to log scale. The current is tiny for any reasonable bias.</p>`,
 a:`<p>φ<sub>Bp</sub> = E<sub>g</sub>/q + χ − φ<sub>m</sub> = 3.4 + 4.1 − 5.15 = 2.35 eV, and no elemental metal has φ<sub>m</sub> &gt; 7 eV. The Mg level (E<sub>A</sub> ≈ 0.17 eV, degeneracy factor 4) is well below the Mott density at 10¹⁹ cm⁻³ for the heavy GaN hole mass, so ionization is incomplete: N<sub>A</sub><sup>−</sup>/N<sub>A</sub> ≈ 13 %, p ≈ 1.3×10¹⁸ cm⁻³. The depletion region contains <i>all</i> the ionized acceptors near the interface. Their charge state follows the local band bending, which the exact Poisson integral includes. E<sub>00</sub>/kT ≈ 0.76 puts transport in the thermionic-field regime, but with a 2.35 eV barrier the tunneling help is negligible.</p>
 <p>Practical p-GaN contacts take a different route. Ni/Au annealed in air (~500 °C) forms p-type NiO and Au-rich islands at the interface, giving ρ<sub>c</sub> ≈ 10⁻⁴–10⁻³ Ω·cm². A heavily Mg-doped p⁺⁺ cap promotes tunneling through the barrier. Ohmic behavior comes from chemistry and interface states rather than from work-function alignment. Mg also has to be activated: H passivation must be broken by an anneal (Nakamura) or by LEEBI (Amano and Akasaki).</p>
-<p class="lk"><b>Explore:</b> Compare the effective hole density with N<sub>A</sub> as you vary log N. Ionization fraction falls as N rises (the Fermi level approaches the acceptor level) until the Mott density is approached.</p>`}
+<p class="lk"><b>Explore:</b> Compare the effective hole density with N<sub>A</sub> as you vary log N. Ionization fraction falls as N rises (the Fermi level approaches the acceptor level) until the Mott density is approached.</p>`},
+'Ag / ITO · degenerate oxide':{
+b:`<p>Indium tin oxide (ITO) is the transparent electrode on almost every flat-panel display, touch screen, OLED and silicon heterojunction solar cell. Silver is what carries current to and along it: printed silver grid fingers on solar cells, thin silver layers in ITO/Ag/ITO stacks for displays.</p>
+<p>ITO is a wide-gap semiconductor (about 3.6 eV) doped so heavily with tin, about 3×10²⁰ cm⁻³, that its Fermi level sits half a volt <i>inside</i> the conduction band. It is a degenerate semiconductor: it conducts like a poor metal and is still transparent. Silver's work function (4.26 eV) is lower than ITO's (≈ 4.5 eV), so electrons spill from the silver into the ITO and pile up in a layer under a nanometre thick. There is no barrier, and the contact is ohmic.</p>
+<p class="lk"><b>Look for:</b> E<sub>F</sub> above E<sub>C</sub> in Fig. 1, the thin accumulation layer in Fig. 2 and Fig. 3, and the straight-line I–V in Fig. 5.</p>
+<p class="lk"><b>Try:</b> Lower log N to 19. ITO's work function rises toward its electron affinity, and the contact is still ohmic. Then pick Pt: even a high work-function metal only makes a barrier a few nanometres thick that electrons tunnel through.</p>`,
+a:`<p>Parameters: χ = 5.0 eV, E<sub>g</sub> = 3.6 eV (optical gap, including some Burstein–Moss shift), m* = 0.35, ε<sub>r</sub> = 9, N<sub>D</sub> = 3.2×10²⁰ cm⁻³ fully ionized (far above the Mott density), so E<sub>F</sub> − E<sub>C</sub> ≈ 0.48 eV and qφ<sub>s</sub> ≈ 4.52 eV, inside the 4.4–4.8 eV range measured for ITO depending on surface treatment. With S = 1 (oxides pin only weakly) qφ<sub>Bn</sub> = φ<sub>m</sub> − χ = −0.74 eV, an accumulation contact with a 0.7 nm Debye length and a 3.8 MV/cm surface field. E<sub>00</sub>/kT ≈ 7, so even a barrier would be crossed by field emission.</p>
+<p>The ideal-interface ρ<sub>c</sub> here is ≈ 10⁻⁸ Ω·cm². Measured Ag/ITO contacts are typically 10⁻⁵–10⁻³ Ω·cm², limited by interfacial oxide, the glass frit or organic binder in printed pastes, and sputter damage. Silver is chosen for its conductivity and solderability rather than for band alignment, which ITO's degeneracy makes nearly irrelevant. Mobility is set to a typical film value of 35 cm²/V·s (ionized-impurity limited) rather than the doping-dependent model used for crystalline semiconductors.</p>
+<p class="lk"><b>Explore:</b> Raise the pinning (lower S) and the electron affinity toward 4.4 eV, the value reported by some photoemission studies of In₂O₃. The contact stays ohmic: at this doping, alignment barely matters. Compare Au / n⁺ Si · tunneling.</p>`},
+'Ag / Al₂O₃ · metal–insulator':{
+b:`<p>Aluminium oxide (alumina) is a wide-gap insulator, about 6.5 eV for the amorphous films made by atomic layer deposition (ALD), and 8.8 eV for crystalline sapphire. It is the gate dielectric in GaN and diamond transistors, the passivation layer on high-efficiency silicon solar cells, and the tunnel barrier in superconducting qubits. Contacts between metals and Al₂O₃ matter because they set how hard it is for electrons to leak through.</p>
+<p>Al₂O₃ has essentially no free carriers. Silver meets an electron barrier of about 3 eV (the gap between silver's Fermi level and the oxide's conduction band) and a hole barrier of about 3.5 eV. Almost no current flows by thermionic emission; leakage through real films comes from tunneling and from defects.</p>
+<p class="lk"><b>Look for:</b> The very small electron affinity (1 eV) in Fig. 1, and the barrier qφ<sub>Bn</sub> in Fig. 2. The bands bend over hundreds of nanometres, but only a little: across a real 10 nm film they are essentially flat.</p>
+<p class="lk"><b>Try:</b> Switch the metal from Ag to Pt and then to Mg. The barrier changes by much less than the work function does, because interface states partly pin the Fermi level.</p>`,
+a:`<p>Parameters: χ = 1.0 eV, E<sub>g</sub> = 6.5 eV (ALD), ε<sub>r</sub> = 9. The charge neutrality level is placed 4.1 eV above E<sub>V</sub> (Robertson's ≈ 5.5 eV for an 8.8 eV gap, scaled) and the pinning factor is S = 0.69, from Mönch's empirical S = 1/[1 + 0.1(ε<sub>∞</sub> − 1)²] with ε<sub>∞</sub> ≈ 3.1. Then qφ<sub>Bn</sub> = 0.69(4.26 − 1.0) + 0.31(6.5 − 4.1) ≈ 2.99 eV, and the interface dipole is −0.27 eV. Internal-photoemission measurements on ALD Al₂O₃ give electron barriers of roughly 3 eV for common metals, with a slope against work function well below 1, consistent with this.</p>
+<p>A deep donor (an oxygen vacancy, 3 eV below E<sub>C</sub>, 10¹⁶ cm⁻³) only fixes where E<sub>F</sub> sits in the bulk; it is essentially un-ionized, so the space charge is tiny (surface field ≈ 6 kV/cm) and the depletion width is far thicker than any real film. For a film of thickness t the relevant picture is a rigid barrier: current flows by direct tunneling (t ≲ 4 nm), Fowler–Nordheim tunneling at high field, or trap-assisted transport, none of which this semi-infinite model includes. The I–V in Fig. 5 is effectively zero at any bias, which is the point. The MOS tab treats Al₂O₃ in its usual role, as a dielectric between a metal and a semiconductor.</p>
+<p class="lk"><b>Explore:</b> Set E<sub>g</sub> to 8.8 eV (sapphire) and compare the barrier. Read: J. Robertson, "Band offsets of wide-band-gap oxides and implications for future electronic devices," J. Vac. Sci. Technol. B 18, 1785 (2000); W. Mönch, <i>Semiconductor Surfaces and Interfaces</i> (Springer).</p>`}
 };
 LESSONS['tab-hj']={
 'Si p–n':{
@@ -3547,6 +3570,3 @@ const qfit=()=>{if(!fitRaf)fitRaf=requestAnimationFrame(fitFigs)};
 new MutationObserver(qfit).observe(document.body,{childList:true,subtree:true});addEventListener('resize',qfit);qfit();
 })();
 </script>
-
-</body>
-</html>
