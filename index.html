@@ -1864,7 +1864,7 @@ show(start);
 const {JM,NAMES,jside,jfun,integ}=window.__hj;const nm=k=>NAMES[k]||k;
 const $=id=>document.getElementById(id);
 const CQ=Math.sqrt(2*Q*VT);
-const GATES={'n⁺ poly-Si':4.05,'p⁺ poly-Si':5.17,Al:4.28,Ti:4.33,W:4.55,TiN:4.6,Mo:4.6,Au:5.1,Ni:5.15,Pt:5.65};
+const GATES={'n⁺ poly-Si':4.05,'p⁺ poly-Si':5.17,Ag:4.26,Al:4.28,Ti:4.33,W:4.55,TiN:4.6,Mo:4.6,Au:5.1,Ni:5.15,Pt:5.65};
 const OX={SiO2:{name:'SiO₂',k:3.9,chi:0.95,Eg:9.0,Ebd:10},Si3N4:{name:'Si₃N₄',k:7.5,chi:2.1,Eg:5.3,Ebd:8},
   Al2O3:{name:'Al₂O₃',k:9,chi:1.35,Eg:8.8,Ebd:8},HfO2:{name:'HfO₂',k:22,chi:2.5,Eg:5.8,Ebd:4},ZrO2:{name:'ZrO₂',k:25,chi:2.5,Eg:5.8,Ebd:4}};
 const MS={gate:'n⁺ poly-Si',phim:4.05,ox:'SiO2',ltox:Math.log10(5),qf:0,S:{mat:'Si',type:'p',dop:'B',logN:17,Eg:1.12,chi:4.05},
@@ -1876,7 +1876,8 @@ const MPRE=[
  ['… with +5×10¹¹ fixed charge',{gate:'Al',ox:'SiO2',tox:100,S:['Si','p','B',15],qf:50,VG:0}],
  ['TiN / 3 nm HfO₂ / p-Si · high-k',{gate:'TiN',ox:'HfO2',tox:3,S:['Si','p','B',17.5],qf:0,VG:0.8}],
  ['Ni / Al₂O₃ / n-GaN',{gate:'Ni',ox:'Al2O3',tox:20,S:['GaN','n','Si',17],qf:0,VG:0}],
- ['Mo / SiO₂ / n-4H-SiC',{gate:'Mo',ox:'SiO2',tox:50,S:['4H-SiC','n','N',16],qf:0,VG:0}]
+ ['Mo / SiO₂ / n-4H-SiC',{gate:'Mo',ox:'SiO2',tox:50,S:['4H-SiC','n','N',16],qf:0,VG:0}],
+ ['Ag / Al₂O₃ / ITO · TCO field effect',{gate:'Ag',ox:'Al2O3',tox:10,S:['ITO','n','Sn',20.5],qf:0,VG:2}]
 ];
 let cvKey=null,cvCache=null;
 
@@ -1886,7 +1887,7 @@ function semiHTML(){return `<fieldset>
   <div class="seg" role="group" aria-label="Doping type"><button id="mStn" aria-pressed="false">n-type</button><button id="mStp" aria-pressed="false">p-type</button></div>
   <div class="ctl"><label for="mSdop">Dopant · ionization energy</label><select id="mSdop"></select></div>
   <div class="ctl"><div class="row"><label for="mSN" id="mSNL">Concentration</label><output id="mSNO"></output></div>
-    <input type="range" id="mSN" min="13" max="19" step="0.05"></div>
+    <input type="range" id="mSN" min="13" max="21.3" step="0.05"></div>
   <div class="ctl"><div class="row"><label for="mSEF">Fermi level E<sub>F</sub> − E<sub>V</sub></label><output id="mSEFO"></output></div>
     <input type="range" id="mSEF" min="0" max="1.12" step="0.002"></div>
   <div class="ctl"><div class="row"><label for="mSEg">Band gap E<sub>g</sub> <span class="tag" id="mSEgT"></span></label><output id="mSEgO"></output></div>
@@ -1906,10 +1907,11 @@ function base(){
     for(let i=0;i<60;i++){const m=(lo+hi)/2;if(vg(F,m)<V)lo=m;else hi=m}return (lo+hi)/2};
   const dQ=(F,u)=>{const d=1e-3;return Math.abs(Qs(F,u+d)-Qs(F,u-d))/(2*d*VT)};
   const uT=sg*2*phiB/VT,VTh=vg(Fe,uT);
-  const span=Math.max(1,0.6*Math.abs(VTh-VFB));
-  const Vlo=Math.floor((Math.min(VFB,VTh)-span)*10)/10,Vhi=Math.ceil((Math.max(VFB,VTh)+span)*10)/10;
+  const noInv=!Object.keys(JM[MS.S.mat].p||{}).length; // degenerate n-only oxides (ITO): no holes, so no inversion; sweep to oxide breakdown
+  const span=Math.max(1,0.6*Math.abs(VTh-VFB)),Vbd=ox.Ebd*1e6*tox;
+  const Vlo=noInv?Math.floor((VFB-Vbd)*10)/10:Math.floor((Math.min(VFB,VTh)-span)*10)/10,Vhi=noInv?Math.ceil((VFB+Vbd)*10)/10:Math.ceil((Math.max(VFB,VTh)+span)*10)/10;
   const Wmax=Math.sqrt(2*s.eps*2*phiB/(Q*s.N));
-  return {s,ox,epsox,tox,Cox,Qf,Fe,Fd,Qs,phims,VFB,sg,phiB,vg,solve,dQ,uT,VTh,Vlo,Vhi,Wmax};
+  return {s,ox,epsox,tox,Cox,Qf,Fe,Fd,Qs,phims,VFB,sg,phiB,vg,solve,dQ,uT,VTh,Vlo,Vhi,Wmax,noInv};
 }
 function mcompute(){
   const B=base(),s=B.s;
@@ -1970,7 +1972,7 @@ function mdrawBefore(R){
   const efOff=s.isN?((Ec-Ef)<0.2?14:-5):((Ef-Ev)<0.2?-5:14);
   s_+=T(sx0+2,y(Ef)+efOff,sb('E','F'),'halo');
   s_+=arrow(sx1-30,y(0),y(Ec))+T(sx1-37,(y(0)+y(Ec))/2+4,`qχ = ${s.chi.toFixed(2)}`,'m halo','end');
-  s_+=arrow(sx1-120,y(0),y(Ef))+T(sx1-113,(y(0)+y(Ef))/2+16,`qφ<tspan font-size="72%" dy="3.5">s</tspan><tspan dy="-3.5"> = ${s.phi.toFixed(2)}</tspan>`,'m halo');
+  {const close=Math.abs(s.phi-s.chi)<0.8;s_+=arrow(sx1-120,y(0),y(Ef))+T(sx1-113,close?y(0)+20:(y(0)+y(Ef))/2+16,`qφ<tspan font-size="72%" dy="3.5">s</tspan><tspan dy="-3.5"> = ${s.phi.toFixed(2)}</tspan>`,'m halo')}
   s_+=arrow(sx1-60,y(Ec),y(Ev))+T(sx1-53,(y(Ec)+y(Ev))/2+4,`E<tspan font-size="72%" dy="3.5">g</tspan><tspan dy="-3.5"> = ${s.Eg.toFixed(2)}</tspan>`,'m halo');
   s_+=T((sx0+sx1)/2,bot+20,`${sideLbl(s)} : ${s.dop}`,'mut','middle');
   // Φms
@@ -2100,7 +2102,7 @@ function mdrawCV(R,C){
   o+=`<text transform="translate(22 ${r1((top+bot)/2)}) rotate(-90)" text-anchor="middle" class="mut">C / C<tspan font-size="72%" dy="3">ox</tspan></text>`;
   o+=T(px1,bot+34,'gate voltage V_G (volts) →','mut','end');
   const vl=(v,lab)=>{if(v<Vlo||v>Vhi)return '';const X=xs(v);return L(X,top,X,bot,'guide')+T(X+5,bot-8,lab,'m halo')};
-  o+=vl(R.VFB,'V<tspan font-size="72%" dy="3">FB</tspan>')+vl(R.VTh,'V<tspan font-size="72%" dy="3">T</tspan>');
+  o+=vl(R.VFB,'V<tspan font-size="72%" dy="3">FB</tspan>')+(R.noInv?'':vl(R.VTh,'V<tspan font-size="72%" dy="3">T</tspan>'));
   const path=k=>'M'+C.pts.map(p=>`${r1(xs(p.V))},${r1(y(p[k]))}`).join('L');
   o+=P(path('dd'),'ivgr')+P(path('hf'),'ivn')+P(path('lf'),'iv');
   // operating point
@@ -2111,7 +2113,7 @@ function mdrawCV(R,C){
   if(MS.mode==='eq'){const ch=1/(1+R.Cox/Math.max(R.dQ(R.Fd,R.us),1e-30));o+=`<circle cx="${r1(xs(MS.VG))}" cy="${r1(y(ch))}" r="3.5" class="hfdot"/>`}
   let lx=px0,ly=16;for(const [c,t] of [['iv','low frequency (quasi-static)'],['ivn','high frequency'],['ivgr','deep depletion (fast sweep)']]){o+=L(lx,ly,lx+26,ly,c)+T(lx+32,ly+4,t,'mut');lx+=32+t.length*6.6+28}
   const accLeft=!R.s.isN;
-  o+=T(accLeft?px0+8:px1-8,top+14,'accumulation','mut halo',accLeft?'start':'end')+T(accLeft?px1-8:px0+8,top+14,'inversion','mut halo',accLeft?'end':'start');
+  o+=T(accLeft?px0+8:px1-8,top+14,'accumulation','mut halo',accLeft?'start':'end')+T(accLeft?px1-8:px0+8,top+14,R.noInv?'depletion (to oxide breakdown)':'inversion','mut halo',accLeft?'end':'start');
   return svg(W,H,o,'Capacitance–voltage curves');
 }
 
@@ -2120,7 +2122,7 @@ const REG={flat:['Flat band','ohmic'],acc:['Accumulation','ohmic'],dep:['Depleti
 function mreadouts(R,C){
   const s=R.s,[txt,cls]=REG[R.reg];
   $('mpill').className='pill '+cls;$('mpill').textContent=txt;
-  $('msub').textContent=`${MS.gate} / ${R.ox.name} / ${sideLbl(s)} · ${s.isN?'inverts with negative gate bias':'inverts with positive gate bias'}`;
+  $('msub').textContent=`${MS.gate} / ${R.ox.name} / ${sideLbl(s)} · ${R.noInv?'degenerate: accumulates or depletes a nanometre-thin layer, never inverts':s.isN?'inverts with negative gate bias':'inverts with positive gate bias'}`;
   const w=[];const Eabs=Math.abs(R.Eox)/1e6;
   if(Eabs>R.ox.Ebd)w.push(`Oxide field ${Eabs.toFixed(1)} MV/cm exceeds the ~${R.ox.Ebd} MV/cm breakdown field of ${R.ox.name}`);
   const surfMaj=s.isN?R.F.nAt(R.us):R.F.pAt(R.us),surfMin=s.isN?R.F.pAt(R.us):R.F.nAt(R.us),Nl=s.isN?s.m.Nc:s.m.Nv,Nm=s.isN?s.m.Nv:s.m.Nc;
@@ -2128,18 +2130,18 @@ function mreadouts(R,C){
   $('mwarns').innerHTML=w.map(x=>`<span class="warn">${x}</span>`).join(' ');
   const eot=10**MS.ltox*3.9/R.ox.k;
   const items=[
-    ['Φ_ms = φ_m − φ_s',`${f3(R.phims)} V`],['Flat-band V_FB',`${f3(R.VFB)} V`],['Threshold V_T (ψ_s = 2φ_B)',`${f3(R.VTh)} V`],
+    ['Φ_ms = φ_m − φ_s',`${f3(R.phims)} V`],['Flat-band V_FB',`${f3(R.VFB)} V`],['Threshold V_T (ψ_s = 2φ_B)',R.noInv?'— (no inversion)':`${f3(R.VTh)} V`],
     ['qφ_B · 2qφ_B',`${R.phiB.toFixed(3)} · ${(2*R.phiB).toFixed(3)} eV`],
     ['C_ox · EOT',`${sci(R.Cox)} F/cm² · ${eot.toFixed(2)} nm`],
     ['Surface potential ψ_s',`${f3(R.psi)} V`],['Oxide drop V_ox',`${f3(R.Vox)} V`],
-    [R.dep?'Depletion width W':'Debye length L_D',R.dep?len(R.W):len(s.LD)],['W_max (at V_T)',len(R.Wmax)],
+    [R.dep?'Depletion width W':'Debye length L_D',R.dep?len(R.W):len(s.LD)],...(R.noInv?[]:[['W_max (at V_T)',len(R.Wmax)]]),
     ['Inversion carriers',R.inv>1?`${sci(R.inv)} cm⁻²`:'—'],['Accumulated carriers',R.acc>1?`${sci(R.acc)} cm⁻²`:'—'],
     ['ℰ_ox · ℰ_s',`${sci(R.Eox)} · ${sci(R.Es)} V/cm`]
   ];
   $('mkv').innerHTML=items.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
   const Cs=R.dQ(R.F,R.us),c=1/(1+R.Cox/Math.max(Cs,1e-30)),ch=1/(1+R.Cox/Math.max(R.dQ(R.Fd,R.us),1e-30));
   const cv=[['C/C_ox at V_G',MS.mode==='eq'?`LF ${c.toFixed(3)} · HF ${ch.toFixed(3)}`:`${c.toFixed(3)} (deep depletion)`],
-    ['HF minimum C_min/C_ox',C.cmin.toFixed(3)],['C_ox',`${(R.Cox*1e6).toFixed(3)} µF/cm²`],['Flat-band C_FB/C_ox',(()=>{const u=R.solve(R.Fe,R.VFB);return (1/(1+R.Cox/R.dQ(R.Fe,u))).toFixed(3)})()]];
+    [R.noInv?'Minimum C/C_ox in range':'HF minimum C_min/C_ox',C.cmin.toFixed(3)],...(R.noInv?[['Sheet-charge change C_ox/q',`${sci(R.Cox/Q)} cm⁻² per volt`]]:[]),['C_ox',`${(R.Cox*1e6).toFixed(3)} µF/cm²`],['Flat-band C_FB/C_ox',(()=>{const u=R.solve(R.Fe,R.VFB);return (1/(1+R.Cox/R.dQ(R.Fe,u))).toFixed(3)})()]];
   $('mcvkv').innerHTML=cv.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');
 }
 function mstory(R){
@@ -3145,7 +3147,8 @@ const TAKE={
 '… with +5×10¹¹ fixed charge':'Charge trapped in the oxide slides the whole C–V curve 2.3 V to the left without changing its shape. Compare V<sub>FB</sub> with the previous exemplar.',
 'TiN / 3 nm HfO₂ / p-Si · high-k':'A high-k oxide gives the capacitance of 0.53 nm of SiO₂ while staying thick enough to block leakage. Check the C<sub>ox</sub> · EOT readout.',
 'Ni / Al₂O₃ / n-GaN':'GaN\'s wide gap means an inversion layer almost never forms, so the capacitor goes into deep depletion. Compare the C–V branches in Fig. 5.',
-'Mo / SiO₂ / n-4H-SiC':'The power-MOSFET material: like GaN, it deep-depletes instead of inverting. Note the wide depletion region in Fig. 3.'},
+'Mo / SiO₂ / n-4H-SiC':'The power-MOSFET material: like GaN, it deep-depletes instead of inverting. Note the wide depletion region in Fig. 3.',
+'Ag / Al₂O₃ / ITO · TCO field effect':'ITO is so heavily doped that the gate can only add or remove carriers in a layer about a nanometre thick; it never inverts. That thin, tunable layer is the basis of ITO optical modulators. See Figs. 2 and 3.'},
 'tab-hs':{
 'GaAs/AlGaAs quantum well':'An 8 nm well quantizes electrons and holes into discrete levels; the e1–hh1 transition sets the emission at ≈840 nm. See the states in Fig. 2.',
 'GaAs/AlGaAs superlattice':'Coupled wells turn one level into a miniband of six states. Count the resonances in Fig. 5.',
@@ -3422,7 +3425,16 @@ b:`<p>Silicon carbide (4H-SiC, gap 3.26 eV) is used for high-voltage power trans
 <p class="lk"><b>Try:</b> Sweep V<sub>G</sub> and compare the high-frequency and deep-depletion C–V curves: as in GaN, inversion is very slow to form.</p>`,
 a:`<p>4H-SiC: E<sub>g</sub> = 3.26 eV, n<sub>i</sub> ~10⁻⁸ cm⁻³, so dark C–V again goes into deep depletion. The conduction-band offset to SiO<sub>2</sub> is ≈2.7 eV, smaller than Si/SiO<sub>2</sub> (≈3.1 eV), which raises Fowler–Nordheim injection and limits the safe oxide field to ≈3–4 MV/cm in practice.</p>
 <p>The SiO<sub>2</sub>/4H-SiC interface has a high density of near-interface traps close to E<sub>C</sub> (attributed to carbon clusters and oxide defects). They capture inversion electrons and depress channel mobility to ≈20–50 cm²/V·s, against ≈900 in the bulk. Post-oxidation anneals in NO or N<sub>2</sub>O passivate part of them and are standard in production. None of this is modeled here, so the ideal C–V is the reference that real SiC data deviate from.</p>
-<p class="lk"><b>Explore:</b> Compute C<sub>ox</sub>/C<sub>dep</sub> at V<sub>G</sub> = −10 V on the deep-depletion branch, and the voltage at which ℰ<sub>s</sub> would reach SiC's ≈2–3 MV/cm critical field: the reason SiC drift layers can be ten times thinner than Si ones.</p>`}
+<p class="lk"><b>Explore:</b> Compute C<sub>ox</sub>/C<sub>dep</sub> at V<sub>G</sub> = −10 V on the deep-depletion branch, and the voltage at which ℰ<sub>s</sub> would reach SiC's ≈2–3 MV/cm critical field: the reason SiC drift layers can be ten times thinner than Si ones.</p>`},
+'Ag / Al₂O₃ / ITO · TCO field effect':{
+b:`<p>The same three layers as an ordinary MOS capacitor, but the "semiconductor" is indium tin oxide, a transparent conductor doped so heavily (≈ 3×10²⁰ electrons/cm³) that it behaves almost like a metal. Silver on top, 10 nm of alumina in between.</p>
+<p>A gate voltage can still move charge in the ITO, but only in a layer about one nanometre thick, because the ITO's own electrons screen the field almost immediately. Positive voltage piles extra electrons into that layer (accumulation); negative voltage pushes some out (depletion). There are no holes in ITO to form an inversion layer, so the capacitance stays close to the oxide capacitance at every voltage up to oxide breakdown.</p>
+<p>That nanometre-thin, voltage-tunable sheet is useful in optics: changing the electron density there changes ITO's refractive index strongly in the near-infrared, the idea behind "epsilon-near-zero" ITO modulators and tunable metasurfaces built from metal/oxide/ITO stacks.</p>
+<p class="lk"><b>Look for:</b> The accumulation layer squeezed against the oxide in Figs. 2 and 3 (the depth axis is in nanometres), and the nearly flat C–V curve in Fig. 5.</p>
+<p class="lk"><b>Try:</b> Sweep V<sub>G</sub> from +8 to −8 V and watch the readouts: the sheet charge changes by about 5×10¹² electrons/cm² per volt, but the band bending stays under half a volt.</p>`,
+a:`<p>Ag (φ<sub>m</sub> = 4.26 eV) / 10 nm Al₂O₃ (κ = 9, C<sub>ox</sub> ≈ 0.80 µF/cm², EOT ≈ 4.3 nm) / n-ITO with N<sub>D</sub> = 3.2×10²⁰ cm⁻³ (E<sub>F</sub> ≈ 0.5 eV above E<sub>C</sub>, qφ<sub>s</sub> ≈ 4.57 eV). Φ<sub>ms</sub> = V<sub>FB</sub> ≈ −0.31 V. The Thomas–Fermi screening length is ≈ 0.7 nm, so at V<sub>G</sub> = +2 V the solution gives ≈ 1.1×10¹³ cm⁻² of accumulated electrons within ≈ 1 nm, roughly doubling the local density, with ψ<sub>s</sub> only ≈ 0.14 V. At −6 V the surface depletes over ≈ 1 nm with ψ<sub>s</sub> ≈ −0.4 V. The sweep is limited to the ≈ ±8 V at which the oxide field reaches its ≈ 8 MV/cm breakdown; ψ<sub>s</sub> never approaches 2φ<sub>B</sub> (≈ 4.4 eV), and ITO has no holes anyway, so there is no threshold or inversion.</p>
+<p>C/C<sub>ox</sub> stays between ≈ 0.9 and 0.95: the semiconductor capacitance of a degenerate electron gas, set by its density of states and the screening length, is much larger than C<sub>ox</sub>. In gate-tunable ITO optics the useful quantity is the change in carrier density in the first nanometre, which shifts the plasma frequency and moves ITO's epsilon-near-zero wavelength (in the near-infrared, roughly 1.2–2 µm depending on doping) (e.g. Feigenbaum, Diest &amp; Atwater, Nano Lett. 10, 2111 (2010)). This tab uses bulk ALD-like Al₂O₃ parameters (χ ≈ 1.35 eV, E<sub>g</sub> ≈ 8.8 eV); the metal–semiconductor tab's Ag/Al₂O₃ exemplar uses values for thinner amorphous films (χ ≈ 1.0, E<sub>g</sub> ≈ 6.5 eV), a reminder that alumina's band edges depend on how it is grown. Not modeled: interface traps and the oxygen-vacancy chemistry of the Al₂O₃/ITO interface, which in real devices shift V<sub>FB</sub> and add hysteresis.</p>
+<p class="lk"><b>Explore:</b> Lower the ITO doping to 10¹⁹ cm⁻³: the screening length grows, C/C<sub>ox</sub> drops further in depletion, and the device starts to look like an ordinary n-type MOS capacitor. Swap the oxide for HfO₂ to get more charge per volt.</p>`}
 };
 LESSONS['tab-hs']={
 'GaAs/AlGaAs quantum well':{
